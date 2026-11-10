@@ -139,7 +139,11 @@ NEWS_KEYWORDS = ["trener", "szkoleniow", "menedzer", "zwolni", "dymisj", "posad"
                  "nie zagra", "pauz", "absencj", "kartk", "czerwon", "chor", "nieobecn", "afer", "korupc", "zarzut", "prokurat",
                  "sledztw", "kryzys", "konflikt", "bunt", "szatni", "zaleglosc", "wyplat", "protest", "kara ", "zakaz", "sztab",
                  "manager", "coach", "sacked", "injur", "ruled out", "suspen", "ban ", "illness", "doubt", "crisis", "charged",
-                 "investigation", "unrest"]
+                 "investigation", "unrest",
+                 # football gossip / rumours (shown in the app as "plotka", counted with half weight)
+                 "plotk", "media:", "podobno", "wedlug", "spekul", "transfer", "interesuje", "chce kupic", "oferta",
+                 "negocjac", "gossip", "rumour", "linked", "target", "bid ", "set to", "expected to", "could leave",
+                 "talks", "interest in", "reportedly", "forma", "seria", "kryzys", "wraca", "powrot"]
 
 
 def slug(display):
@@ -219,8 +223,8 @@ def collect_news(docs, teams_kb, report, out_dir, hours=72):
         report["news"][src] = n
     items.sort(key=lambda x: x["published"] or "", reverse=True)
     with open(os.path.join(out_dir, "news_candidates.json"), "w", encoding="utf-8") as fh:
-        json.dump(items[:150], fh, ensure_ascii=False, indent=1)
-    report["news"]["candidates"] = min(len(items), 150)
+        json.dump(items[:300], fh, ensure_ascii=False, indent=1)
+    report["news"]["candidates"] = min(len(items), 300)
 
 
 def http_get_text(url, timeout=20):

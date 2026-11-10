@@ -264,7 +264,8 @@ const tslug=s=>String(s).normalize("NFKD").replace(/[̀-ͯ]/g,"").toLowerCase().
 function mergeTeam(t){ const kb=teamsDB[tslug(t.name)]; if(!kb) return t;
   const cut=Date.now()-21*864e5, seen=new Set((t.news||[]).map(n=>n.text));
   const kn=(kb.news||[]).filter(n=>(!n.date||new Date(n.date).getTime()>=cut)&&!seen.has(n.text));
-  return {...t, coach:t.coach||kb.coach, news:(t.news||kn.length)?[...(t.news||[]),...kn]:undefined,
+  const kr=(kb.rumours||[]).filter(n=>!n.date||new Date(n.date).getTime()>=cut);
+  return {...t, coach:t.coach||kb.coach, news:(t.news||kn.length)?[...(t.news||[]),...kn]:undefined, rumours:kr.length?kr:undefined,
     morale:t.morale??kb.morale, transfers:t.transfers??kb.transfers, transfersNote:t.transfersNote??kb.transfersNote};
 }
 function rebuild(){ matches=rawMatches.map(m=>({...m,home:mergeTeam(m.home),away:mergeTeam(m.away)})); }
@@ -306,6 +307,10 @@ function eloLambdas(We,T){ // goal expectations whose Poisson points share match
     if(ph+0.5*pd<We) lo=s; else hi=s; }
   const s=(lo+hi)/2; return [(T+s)/2,(T-s)/2];
 }
+// club mood: explicit value if set, otherwise from news (full weight) and rumours (half weight)
+function moraleOf(t){ if(t.morale!=null) return t.morale;
+  const s=(t.news||[]).reduce((a,n)=>a+(n.impact||0),0)*0.5+(t.rumours||[]).reduce((a,n)=>a+(n.impact||0),0)*0.25;
+  return Math.round(clamp(s,-2,2)*100)/100; }
 function teamAdj(t,side){
   const out=[];
   let own=0,oppUp=0;
@@ -314,7 +319,8 @@ function teamAdj(t,side){
   if(own||oppUp) out.push({k:"abs",label:"Absencje: "+t.name,note:(t.absences||[]).map(x=>x.player).join(", "),own:1-own,opp:1+oppUp});
   let kb=0; for(const x of t.keyPlayers||[]) kb+=0.02*clamp(x.boost||1,1,3); kb=Math.min(kb,0.1);
   if(kb) out.push({k:"key",label:"Liderzy w formie: "+t.name,note:(t.keyPlayers||[]).map(x=>x.player).join(", "),own:1+kb,opp:1});
-  if(t.morale) out.push({k:"mor",label:"Sytuacja w klubie: "+t.name,note:(t.news||[]).map(n=>n.text).slice(0,2).join(" · "),own:1+0.025*t.morale,opp:1-0.015*t.morale});
+  const mor=moraleOf(t);
+  if(mor) out.push({k:"mor",label:"Sytuacja w klubie: "+t.name,note:[...(t.news||[]),...(t.rumours||[])].map(n=>n.text).slice(0,2).join(" · "),own:1+0.025*mor,opp:1-0.015*mor});
   if(t.transfers) out.push({k:"tr",label:"Transfery: "+t.name,note:t.transfersNote||"",own:1+0.015*t.transfers,opp:1});
   if((t.restDays!=null&&t.restDays<4)||t.europeMidweek) out.push({k:"fat",label:"Zmęczenie: "+t.name,note:(t.restDays!=null?t.restDays+" dni odpoczynku":"")+(t.europeMidweek?" · puchary w tygodniu":""),own:0.96,opp:1.03});
   if(t.motivation) out.push({k:"mot",label:"Motywacja: "+t.name,note:t.motivationNote||"",own:1+0.03*t.motivation,opp:1});
@@ -370,7 +376,7 @@ function predict(m){
     ["xG",!!(m.home.overall?.fxg!=null||m.home.venue?.fxg!=null)],
     ["Kontuzje",!!(m.home.absences||m.away.absences)],
     ["Trener",!!(m.home.coach?.name||m.away.coach?.name)],
-    ["Sytuacja w klubie",!!(m.home.news||m.away.news)],
+    ["Sytuacja w klubie",!!(m.home.news||m.away.news||m.home.rumours||m.away.rumours)],
     ["H2H",hs.n>0],
     ["Kursy rynkowe",!!market]];
   const dqScore=dq.filter(x=>x[1]).length;
@@ -484,6 +490,7 @@ function teamPoints(m,p,side){
   for(const x of t.absences||[]) add(cons,1+(x.weight||1),`Brak: ${x.player}${x.reason?" ("+x.reason+")":""}`);
   for(const x of t.keyPlayers||[]) add(pros,1+(x.boost||1),`W formie: ${x.player}${x.note?" – "+x.note:""}`);
   for(const x of t.news||[]){ if(x.impact>0) add(pros,1.5,x.text); else if(x.impact<0) add(cons,1.5,x.text); }
+  for(const x of t.rumours||[]){ if(x.impact>0) add(pros,0.8,"Plotka: "+x.text); else if(x.impact<0) add(cons,0.8,"Plotka: "+x.text); }
   if(t.transfers>0) add(pros,1.2,`Transfery: ${t.transfersNote||"wzmocnienia w oknie transferowym"}`);
   else if(t.transfers<0) add(cons,1.2,`Transfery: ${t.transfersNote||"osłabienia w oknie transferowym"}`);
   if((t.restDays!=null&&t.restDays<4)||t.europeMidweek) add(cons,2,`Zmęczenie: ${t.europeMidweek?"mecz w pucharach w tym tygodniu":t.restDays+" dni od ostatniego meczu"}`);
@@ -511,6 +518,17 @@ function missingNote(p){
   const needKey=(!k.odds&&miss.includes("kursy rynkowe"))||(!k.apiFootball&&(miss.includes("kontuzje")||miss.includes("trener")));
   return `Brakuje: ${miss.join(", ")}. `+(needKey?"Kursy, kontuzje i trenerów aplikacja pobiera z API dopiero po zapisaniu kluczy (Ustawienia → Źródła danych). ":"")+"Resztę uzupełnia codzienna aktualizacja, więc typ może się jeszcze zmienić.";
 }
+function coachNewsHtml(m){
+  const cl=t=>{ const c=t.coach; if(!c?.name) return `${esc(t.name)}: brak danych`;
+    return `${esc(t.name)}: <b>${esc(c.name)}</b>${c.status&&c.status!=="ok"?` (${esc(c.status)})`:""}`; };
+  const items=[]; for(const t of [m.home,m.away]){
+    for(const n of t.news||[]) items.push({...n,team:t.name,kind:"news"});
+    for(const n of t.rumours||[]) items.push({...n,team:t.name,kind:"plotka"}); }
+  items.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
+  const ic=n=>n.impact>0?"✓":n.impact<0?"✗":"•";
+  return `<div class="f2">Trenerzy: ${cl(m.home)} · ${cl(m.away)}</div>
+    <div><h4><span>Newsy i plotki</span></h4>${items.length?`<ul>${items.slice(0,5).map(n=>`<li class="${n.impact>0?"pro":n.impact<0?"con":"risk"}"><i>${ic(n)}</i><span>${n.kind==="plotka"?"<b>Plotka</b> · ":""}${esc(n.team)}: ${esc(n.text)} <span style="opacity:.7">(${esc(n.source||"")})</span></span></li>`).join("")}</ul>`:`<div class="f2">Brak świeżych newsów i plotek o tych drużynach.</div>`}</div>`;
+}
 function whyPanel(m,p,full){
   const H=teamPoints(m,p,"h"), A=teamPoints(m,p,"a");
   const favH=p.fin.h>=p.fin.a, F=favH?H:A, U=favH?A:H, fP=favH?p.fin.h:p.fin.a, uP=favH?p.fin.a:p.fin.h;
@@ -527,6 +545,7 @@ function whyPanel(m,p,full){
     <div><h4>${crest(U.t.name,18)}<span>${clear?"Dlaczego "+esc(U.t.name)+" przegra":"Dlaczego "+esc(U.t.name)+" ma mniejsze szanse"}</span><span class="pc num">${pct(uP)}</span></h4>
       <ul>${b.length?b.map(x=>li(x,"con","✗")).join(""):`<li class="con"><i>✗</i><span>Brak wyraźnych słabości, dlatego niespodzianka jest realna.</span></li>`}</ul></div>
     ${c.length?`<div><h4><span>Co może pójść inaczej</span></h4><ul>${c.map(x=>li(x,"risk","!")).join("")}</ul></div>`:""}
+    ${coachNewsHtml(m)}
     <div class="f2">Remis: <b>${pct(p.fin.d)}</b>${p.fin.d>=0.28?", bo to wyrównany mecz":""}. Oczekiwane gole: ${esc(m.home.name)} <b>${dec(p.lh,2)}</b>, ${esc(m.away.name)} <b>${dec(p.la,2)}</b>.</div>
     <div class="f2">Kurs opłaca się od: 1 · <b>${fo("h")}</b>, X · <b>${fo("d")}</b>, 2 · <b>${fo("a")}</b>${settings.tax?" (z 12% podatkiem)":""}</div>
     ${m.odds&&m.odds.h?`<div class="f2">Rynek${m.odds.n?` (mediana ${m.odds.n} bukm., bez marży)`:""}: 1 · <b>${dec(+m.odds.h,2)}</b>, X · <b>${dec(+m.odds.d,2)}</b>, 2 · <b>${dec(+m.odds.a,2)}</b>${m.odds.betclic?`. Betclic FR: ${dec(+m.odds.betclic.h,2)} / ${dec(+m.odds.betclic.d,2)} / ${dec(+m.odds.betclic.a,2)}`:""}</div>`:""}
@@ -654,6 +673,7 @@ function teamBlock(t,label){
     <div class="note"><b>Absencje</b></div>${list(t.absences,x=>`<div>• ${esc(x.player)} <span class="note">${esc(x.reason||"")}</span></div>`,"brak zweryfikowanych informacji")}
     <div class="note"><b>W formie</b></div>${list(t.keyPlayers,x=>`<div>• ${esc(x.player)} <span class="note">${esc(x.note||"")}</span></div>`,"brak zweryfikowanych informacji")}
     <div class="note"><b>Sytuacja w klubie</b></div>${list(t.news,x=>`<div>• ${esc(x.text)}${x.source||x.date?` <span class="note">(${esc([x.source,x.date?new Date(x.date).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}):""].filter(Boolean).join(", "))})</span>`:""}</div>`,"brak zweryfikowanych informacji")}
+    <div class="note"><b>Plotki (niepotwierdzone)</b></div>${list(t.rumours,x=>`<div>• ${esc(x.text)} <span class="note">(${esc(x.source||"")})</span></div>`,"brak")}
     ${t.transfersNote?`<div class="note"><b>Transfery:</b> ${esc(t.transfersNote)}</div>`:""}
   </div>`; }
 function renderDetail(id){
