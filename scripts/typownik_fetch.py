@@ -271,6 +271,26 @@ def to_display(name, candidates=None):
     return best if score >= 0.5 else None
 
 
+_EN2PL = None
+
+
+def nation_pl(name):
+    """English country name (odds/API providers) -> Polish display name used in the app (from elo.json)."""
+    global _EN2PL
+    if _EN2PL is None:
+        _EN2PL = {}
+        try:
+            with open(os.path.join(HOME, "data", "elo.json"), encoding="utf-8") as f:
+                for en, v in (json.load(f).get("teams") or {}).items():
+                    if v.get("pl"):
+                        _EN2PL[en] = v["pl"]
+            _EN2PL.update({"Czech Republic": "Czechy", "Republic of Ireland": "Irlandia", "Korea Republic": "Korea Południowa",
+                           "USA": "USA", "Turkiye": "Turcja", "Bosnia & Herzegovina": "Bośnia i Hercegowina"})
+        except (OSError, ValueError):
+            pass
+    return _EN2PL.get(name, name)
+
+
 def parse_iso(s):
     s = re.sub(r"\.\d+", "", str(s).strip().replace("Z", "+00:00"))
     t = dt.datetime.fromisoformat(s)
@@ -367,7 +387,10 @@ def fetch_odds(docs, key, report, patches):
             continue
         cands = league_teams(docs, league)
         for ev in js:
-            h, a = to_display(ev.get("home_team", ""), cands), to_display(ev.get("away_team", ""), cands)
+            hn, an = ev.get("home_team", ""), ev.get("away_team", "")
+            if league in ("nl", "friendly", "wc", "euro"):
+                hn, an = nation_pl(hn), nation_pl(an)
+            h, a = to_display(hn, cands), to_display(an, cands)
             doc = find_doc(docs, league, h, a, parse_iso(ev["commence_time"])) if h and a else None
             if not doc:
                 report["unmatched"].append(f"kursy {league}: {ev.get('home_team')} – {ev.get('away_team')} ({ev.get('commence_time')})")
@@ -495,7 +518,10 @@ def fetch_af(docs, key, budget, report, patches, team_patches=None, h2h_cap=25):
             continue
         cands = league_teams(docs, league)
         th, ta = x["teams"]["home"], x["teams"]["away"]
-        h, a = to_display(th["name"], cands), to_display(ta["name"], cands)
+        hn, an = th["name"], ta["name"]
+        if league in ("nl", "friendly", "wc", "euro"):
+            hn, an = nation_pl(hn), nation_pl(an)
+        h, a = to_display(hn, cands), to_display(an, cands)
         doc = find_doc(docs, league, h, a, parse_iso(x["fixture"]["date"])) if h and a else None
         if doc:
             fx[doc] = (x["fixture"]["id"], th["id"], ta["id"])
