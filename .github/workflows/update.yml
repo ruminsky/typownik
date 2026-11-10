@@ -1,0 +1,66 @@
+name: Codzienna aktualizacja Typownika
+
+on:
+  schedule:
+    - cron: "30 5 * * *"   # 06:30 czasu polskiego zimą (07:30 latem)
+    - cron: "0 15 * * *"   # 16:00 zimą: kontuzje i kursy przed wieczornymi meczami
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: typownik-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Przygotuj katalog roboczy
+        env:
+          ODDS_API_KEY: ${{ secrets.ODDS_API_KEY }}
+          API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
+        run: |
+          T=~/.typownik
+          mkdir -p $T/data $T/run $T/app/crests $T/cache
+          cp scripts/*.py $T/
+          cp docs/data/*.json $T/data/
+          cp state/history.json state/elo.json $T/data/ 2>/dev/null || true
+          cp state/cache/*.json $T/cache/ 2>/dev/null || true
+          cp docs/crests/*.png $T/app/crests/
+          [ -n "$ODDS_API_KEY" ] && printf %s "$ODDS_API_KEY" > $T/odds-api.key
+          [ -n "$API_FOOTBALL_KEY" ] && printf %s "$API_FOOTBALL_KEY" > $T/api-football.key
+          chmod 600 $T/*.key 2>/dev/null || true
+
+      - name: Pobierz dane (terminarze, tabele, wyniki, Elo, kursy, kontuzje, H2H, trenerzy, zawodnicy, herby)
+        run: python3 -I ~/.typownik/typownik_build.py
+
+      - name: Newsy z klubów (reguły)
+        run: python3 -I ~/.typownik/news_rules.py
+
+      - name: Skopiuj wyniki do strony
+        run: |
+          T=~/.typownik
+          python3 -I $T/typownik_build.py --pub-only
+          cp $T/run/pub/data/*.json docs/data/
+          cp $T/data/history.json $T/data/elo.json state/ 2>/dev/null || true
+          cp $T/cache/*.json state/cache/ 2>/dev/null || true
+          cp $T/app/crests/*.png docs/crests/
+          cat $T/run/build_report.json
+
+      - name: Zapisz i opublikuj
+        run: |
+          git config user.name "typownik-bot"
+          git config user.email "typownik-bot@users.noreply.github.com"
+          git add docs state
+          if git diff --cached --quiet; then echo "Brak zmian"; exit 0; fi
+          git commit -m "Aktualizacja danych $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push
