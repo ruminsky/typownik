@@ -19,9 +19,35 @@ EN_WORDS = re.compile(r"\b(the|to|of|and|for|in|on|with|after|is|are|was|set|say
                       r"that|has|have|not|but|by|an|a|up|off|injury|transfer|boss|manager|star|deal|report|news)\b", re.I)
 
 
-def is_en(t):
+PL_WORDS = re.compile(r"\b(i|w|z|na|się|nie|po|do|od|za|jest|oraz|przez|dla|ze|we|o|co|jak|już|czy|ma|był|była|"
+                      r"będzie|został|została|gdzie|ten|ta|tak|tylko|jeszcze|przed|mecz\w*|trener\w*|kontuzj\w*|gol\w*|"
+                      r"wygra\w*|przegra\w*|remis\w*|zremis\w*|pokona\w*|klub\w*|piłkar\w*|pilkar\w*|reprezentac\w*|bramk\w*|"
+                      r"meczu|druzyn\w*|drużyn\w*|sezon\w*|kibic\w*|zwyci\w*)\b", re.I)
+EN_MORE = re.compile(r"\b(explains?|chief|delay|punishment|target|summer|news|rumours?|rejected|wait|continues|amid|appeal|"
+                     r"charges?|theory|signs?|signing|loan|deal|clash|ahead|ready|insists?|confirms?|latest|update|"
+                     r"return|ruled|should|might|plans?|eyes?|wants?|reveals?|admits?|hails?|slams?|blow|boost)\b", re.I)
+BBC_RUMOURS = re.compile(r"^(.{2,40}?) transfer (rumours|news)\s*:\s*(.+)$", re.I)
+BBC_PREFIX = re.compile(r"^(.{2,40}?) (news|gossip|latest)\s*:\s*", re.I)
+
+
+def is_en(t, lang=None):
     t = t or ""
-    return bool(t) and not PL_CHARS.search(t) and len(EN_WORDS.findall(t)) >= 2
+    if not t:
+        return False
+    if lang == "en":
+        return True
+    if lang == "pl":
+        return False
+    words = len(EN_WORDS.findall(t)) + len(EN_MORE.findall(t))
+    return (not PL_CHARS.search(t) and not PL_WORDS.search(t)) or words >= 3
+
+
+def prepare(t):
+    """Turn BBC-style prefixes into something a reader understands before translating."""
+    m = BBC_RUMOURS.match(t)
+    if m:
+        return f"Plotki transferowe wokół {m.group(1)}: {m.group(3)}", False
+    return BBC_PREFIX.sub("", t), True
 
 
 def load_cache():
@@ -62,7 +88,7 @@ def main():
     for kb in T.get("teams", {}).values():
         for key in ("news", "rumours"):
             for n in kb.get(key) or []:
-                if is_en(n.get("text")) and n["text"] not in cache:
+                if is_en(n.get("text"), n.get("lang")) and n["text"] not in cache:
                     todo.add(n["text"])
         note = (kb.get("coach") or {}).get("note")
         if is_en(note) and note not in cache:
@@ -75,11 +101,16 @@ def main():
     fn = translator() if todo else None
     done = 0
     for t in sorted(todo):
+        text, needs = prepare(t)
+        if not needs:  # already rewritten into Polish (BBC transfer rumours)
+            cache[t] = text
+            done += 1
+            continue
         if fn is None:
-            break
+            continue
         try:
-            out = fn(t).strip()
-            if out and out != t:
+            out = fn(text).strip()
+            if out and out != text:
                 cache[t] = out
                 done += 1
         except Exception:
@@ -95,10 +126,15 @@ def main():
         for key in ("news", "rumours"):
             keep = []
             for n in kb.get(key) or []:
-                n["text"] = pl(n.get("text"))
-                if is_en(n["text"]):
-                    dropped += 1
-                    continue
+                if is_en(n.get("text"), n.get("lang")):
+                    if n.get("text") not in cache:
+                        dropped += 1
+                        continue
+                    n["text"] = cache[n["text"]]
+                    n["lang"] = "pl"
+                    if is_en(n["text"]) and not n["text"].startswith("Plotki transferowe"):
+                        dropped += 1
+                        continue
                 keep.append(n)
             if key in kb:
                 kb[key] = keep

@@ -134,7 +134,7 @@ def main():
         if not cat:
             continue  # not about anything that can affect a match
         item = {"text": text, "impact": imp, "cat": cat, "date": c.get("published") or stamp, "source": c.get("source"),
-                "url": c.get("url"), "auto": True}
+                "url": c.get("url"), "auto": True, "lang": c.get("lang") or "pl"}
         key = "rumours" if rumour else "news"
         other = "news" if rumour else "rumours"
         # one headline lives in one list only: an automatic item re-classified today moves to the right list

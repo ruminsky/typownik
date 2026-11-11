@@ -219,7 +219,8 @@ def collect_news(docs, teams_kb, report, out_dir, hours=72):
             seen.add(key)
             n += 1
             items.append({"teams": teams, "leagues": sorted({wanted[t] for t in teams}), "source": src, "title": title,
-                          "summary": desc[:280], "url": link, "published": iso(pub) if pub else None})
+                          "summary": desc[:280], "url": link, "published": iso(pub) if pub else None,
+                          "lang": "en" if src == "BBC Sport" else "pl"})
         report["news"][src] = n
     try:
         items += team_news(docs, report)
@@ -316,7 +317,8 @@ def team_news(docs, report, days_ahead=14, per_team=8, pause=0.6):
                         or not any(rx.search(t) for rx in rxs):
                     continue
                 items.append({"teams": [team], "leagues": [league_of[team]], "source": it["source"], "title": it["title"],
-                              "summary": "", "url": it["url"], "published": iso(it["published"]) if it["published"] else None})
+                              "summary": "", "url": it["url"], "published": iso(it["published"]) if it["published"] else None,
+                              "lang": "pl" if hl == "pl" else "en"})
                 kept += 1
         if fails >= 6:
             break
