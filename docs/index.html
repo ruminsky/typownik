@@ -527,7 +527,7 @@ function coachNewsHtml(m){
   items.sort((a,b)=>(b.date||"").localeCompare(a.date||""));
   const ic=n=>n.impact>0?"✓":n.impact<0?"✗":"•";
   return `<div class="f2">Trenerzy: ${cl(m.home)} · ${cl(m.away)}</div>
-    <div><h4><span>Newsy i plotki</span></h4>${items.length?`<ul>${items.slice(0,5).map(n=>`<li class="${n.impact>0?"pro":n.impact<0?"con":"risk"}"><i>${ic(n)}</i><span>${n.kind==="plotka"?"<b>Plotka</b> · ":""}${esc(n.team)}: ${esc(n.text)} <span style="opacity:.7">(${esc(n.source||"")})</span></span></li>`).join("")}</ul>`:`<div class="f2">Brak świeżych newsów i plotek o tych drużynach.</div>`}</div>`;
+    <div><h4><span>Newsy i plotki</span></h4>${items.length?`<ul>${items.slice(0,5).map(n=>`<li class="${n.impact>0?"pro":n.impact<0?"con":"risk"}"><i>${ic(n)}</i><span><b>${[n.kind==="plotka"?"Plotka":"",n.cat||""].filter(Boolean).map(esc).join(" · ")||"Info"}</b> · ${esc(n.team)}: ${esc(n.text)} <span style="opacity:.7">(${esc(n.source||"")})</span></span></li>`).join("")}</ul>`:`<div class="f2">Brak świeżych newsów i plotek o tych drużynach.</div>`}</div>`;
 }
 function whyPanel(m,p,full){
   const H=teamPoints(m,p,"h"), A=teamPoints(m,p,"a");
@@ -672,8 +672,8 @@ function teamBlock(t,label){
     <div class="note"><b>Ostatnie mecze</b></div>${formChips(t.form)}
     <div class="note"><b>Absencje</b></div>${list(t.absences,x=>`<div>• ${esc(x.player)} <span class="note">${esc(x.reason||"")}</span></div>`,"brak zweryfikowanych informacji")}
     <div class="note"><b>W formie</b></div>${list(t.keyPlayers,x=>`<div>• ${esc(x.player)} <span class="note">${esc(x.note||"")}</span></div>`,"brak zweryfikowanych informacji")}
-    <div class="note"><b>Sytuacja w klubie</b></div>${list(t.news,x=>`<div>• ${esc(x.text)}${x.source||x.date?` <span class="note">(${esc([x.source,x.date?new Date(x.date).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}):""].filter(Boolean).join(", "))})</span>`:""}</div>`,"brak zweryfikowanych informacji")}
-    <div class="note"><b>Plotki (niepotwierdzone)</b></div>${list(t.rumours,x=>`<div>• ${esc(x.text)} <span class="note">(${esc(x.source||"")})</span></div>`,"brak")}
+    <div class="note"><b>Sytuacja w klubie</b></div>${list(t.news,x=>`<div>• ${x.cat?`<b>${esc(x.cat)}</b> · `:""}${esc(x.text)}${x.source||x.date?` <span class="note">(${esc([x.source,x.date?new Date(x.date).toLocaleDateString("pl-PL",{day:"numeric",month:"short"}):""].filter(Boolean).join(", "))})</span>`:""}</div>`,"brak zweryfikowanych informacji")}
+    <div class="note"><b>Plotki (niepotwierdzone)</b></div>${list(t.rumours,x=>`<div>• ${x.cat?`<b>${esc(x.cat)}</b> · `:""}${esc(x.text)} <span class="note">(${esc(x.source||"")})</span></div>`,"brak")}
     ${t.transfersNote?`<div class="note"><b>Transfery:</b> ${esc(t.transfersNote)}</div>`:""}
   </div>`; }
 function renderDetail(id){
