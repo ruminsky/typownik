@@ -25,7 +25,9 @@ spec.loader.exec_module(tf)
 RUMOUR = re.compile(r"(gossip|plotk\w*|podobno|spekul\w*|rumou?r\w*|według (mediów|dziennik\w*|portal\w*|\w+ ?\w*)|"
                     r"media:|media (podają|donoszą|informują)|ma (zostać|trafić)|może (trafić|odejść|zostać)|"
                     r"interesuje się|chce (kupić|sprowadzić)|negocjuj\w*|linked|target|reportedly|set to|"
-                    r"expected to|could (leave|join|be)|in talks|interest in|monitor\w*|eye\w* move|\?$)", re.I)
+                    r"expected to|could (leave|join|be)|in talks|interest in|monitor\w*|eye\w* move|eyeing|paper talk|would consider|"
+                    r"considering|keen on|plot\w* (move|bid)|wants? to sign|wants? |transfer (news|rumou?rs?)|close tabs|"
+                    r"latest transfer|\?$)", re.I)
 PRIVATE = re.compile(r"(żon\w*|mąż|męża|rozw\w*|dziewczyn\w*|partnerk\w*|ślub\w*|dzieck\w*|syn\w*|córk\w*|matk\w*|ojc\w*|"
                      r"pogrzeb|zmarł\w*|śmier\w*|wife|girlfriend|divorce|wedding|funeral|died|son |daughter)", re.I)
 COACH = r"(trener\w*|szkoleniow\w*|menedżer\w*|manager|head coach|coach|boss)"
@@ -38,7 +40,10 @@ RULES = [
 ]
 NEG = re.compile(r"(kontuzj\w*|uraz\w*|injur\w*|ruled out|wypada|nie zagra|opuści\w* zgrupowanie|pauzuj\w*|out for|"
                  r"kryzys\w*|konflikt\w*|kłopot\w*|problem\w*|zaległ\w*|protest\w*|bunt\w*|porażk\w*|klęsk\w*|"
-                 r"kompromitacj\w*|rozpada|crisis|unrest|row|setback|blow|doubt|odejś\w*|leave|exit|kara\w*|fine)", re.I)
+                 r"kompromitacj\w*|rozpada|crisis|unrest|row|setback|blow|doubt|odejś\w*|leave|exit|kara\w*|fine|"
+                 r"going wrong|struggl\w*|slump|worst|poor (form|run)|losing streak|seri\w* porażek|charged|zarzut\w*)", re.I)
+TRANSFER = re.compile(r"(transfer\w*|sign\w*|bid|kupi\w*|sprowadz\w*|wypożycz\w*|loan|target|want\w*|"
+                      r"interest\w*|close tabs|oferta|ofert\w*|negocj\w*)", re.I)
 POS = re.compile(r"(wraca\w*|powr[óo]t\w*|seria zwycięstw|w formie|błyszczy|hat-trick|wzmocni\w*|return\w*|boost|"
                  r"fit again|back in training|zwycięsk\w* seri\w*|rekord\w*|lider\w*)", re.I)
 
@@ -90,6 +95,8 @@ def main():
                                "auto": True, "updatedAt": stamp}
                 changes.append(f"{team}: trener → {status}")
         imp = impact_of(title + " " + summ[:160])
+        if rumour and not status and TRANSFER.search(title):
+            imp = 0  # interest in / from other clubs does not weaken a team before the match
         if status in ("zwolniony", "pod presją", "zawieszony"):
             imp = -1
         elif status == "nowy":

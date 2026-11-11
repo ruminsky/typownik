@@ -221,10 +221,109 @@ def collect_news(docs, teams_kb, report, out_dir, hours=72):
             items.append({"teams": teams, "leagues": sorted({wanted[t] for t in teams}), "source": src, "title": title,
                           "summary": desc[:280], "url": link, "published": iso(pub) if pub else None})
         report["news"][src] = n
+    try:
+        items += team_news(docs, report)
+    except Exception as e:  # never let the extra source break the build
+        report["errors"].append(f"Google News: {e}")
     items.sort(key=lambda x: x["published"] or "", reverse=True)
     with open(os.path.join(out_dir, "news_candidates.json"), "w", encoding="utf-8") as fh:
-        json.dump(items[:300], fh, ensure_ascii=False, indent=1)
-    report["news"]["candidates"] = min(len(items), 300)
+        json.dump(items[:2500], fh, ensure_ascii=False, indent=1)
+    report["news"]["candidates"] = min(len(items), 2500)
+
+
+# ---------------------------------------------------------------- Google News per team
+GN_NOISE = re.compile(r"(gdzie ogl[aą]da|transmisj|na żywo|live stream|wyniki na żywo|sk[lł]ady|line-?ups?|team stats|"
+                      r"statystyki|head-to-head|h2h|highlights|skr[oó]t meczu|bramki|u-?1[0-9]|u-?2[0-3]|kobiet|women|"
+                      r"official (club )?website|tickets|bilety|fantasy|kurs[y]? bukmacher|typy|zak[lł]ad|betting|odds|"
+                      r"predictions?|przewidywan|prognoz|player ratings|oceny pi[lł]karzy|wallpaper|quiz|^watch |volleyball|siatk|"
+                      r"koszyk|basket|tenis|tennis|handball|piłk\w* ręczn|futsal|esport|award hono|kobiec|mistrzy[nń]|"
+                      r"live commentary|relacja live|minuta po minucie|film|serial|reżyser|\bwcl\b|\bwsl\b|lionesses|youtuber)", re.I)
+GN_FIXTURE = re.compile(r"^[^:|!?]{2,40} (-|–|vs\.?|v) [^|!?]{2,40}?( \d+[:-]\d+)?$")  # bare "Team - Team" match pages
+NATION_LEAGUES = ("nl", "friendly", "wc", "euro")
+
+
+def _gn_fetch(q, hl, gl, ceid, timeout=20):
+    url = "https://news.google.com/rss/search?" + urllib.parse.urlencode({"q": q, "hl": hl, "gl": gl, "ceid": ceid})
+    st, _, body = http_get_text(url, timeout=timeout)
+    if st != 200 or not body:
+        return None
+    out = []
+    for block in re.findall(r"<item>(.*?)</item>", body, re.S):
+        title = _tag(block, "title")
+        src = _tag(block, "source")
+        if src and title.endswith(" - " + src):
+            title = title[: -len(src) - 3]
+        try:
+            pub = email.utils.parsedate_to_datetime(_tag(block, "pubDate"))
+            pub = pub if pub.tzinfo else pub.replace(tzinfo=dt.timezone.utc)
+        except (TypeError, ValueError):
+            pub = None
+        out.append({"title": title.strip(), "source": src or "Google News", "url": _tag(block, "link"), "published": pub})
+    return out
+
+
+def team_news(docs, report, days_ahead=14, per_team=8, pause=0.6):
+    """Recent articles about each team of the coming matches (Google News RSS, Polish + English editions)."""
+    import time
+    soon = now_utc() + dt.timedelta(days=days_ahead)
+    order, league_of = [], {}
+    for m in sorted(docs.values(), key=lambda m: -(m.get("popularity") or 0)):
+        if parse_iso(m["kickoff"]) > soon:
+            continue
+        for side in ("home", "away"):
+            n = m[side]["name"]
+            if n not in league_of:
+                league_of[n] = m["league"]
+                order.append(n)
+    en_of = {}
+    try:
+        with open(os.path.join(HOME, "data", "elo.json"), encoding="utf-8") as f:
+            for en, v in (json.load(f).get("teams") or {}).items():
+                if v.get("pl"):
+                    en_of[v["pl"]] = en
+    except (OSError, ValueError):
+        pass
+    since = now_utc() - dt.timedelta(days=7)
+    items, fails, done = [], 0, 0
+    for team in order:
+        nation = league_of[team] in NATION_LEAGUES
+        if nation:
+            queries = [(f'"{en_of.get(team, team)}" football when:5d', "en-GB", "GB", "GB:en")]
+        else:
+            pl_q = (NEWS_ALIASES.get(team) or [team])[0]
+            en_q = (ALIASES.get(team) or [team])[0] if team in ("Bayern Monachium", "Real Madryt", "Atlético Madryt") else team
+            queries = [(f'"{pl_q}" (mecz OR trener OR liga OR gol OR transfer OR piłkarz OR kontuzja) when:5d', "pl", "PL", "PL:pl"), (f'"{en_q}" (football OR soccer) when:3d', "en-GB", "GB", "GB:en")]
+        rxs = news_rx().get(team) or [_stem_rx(team)]
+        if nation and team in en_of:
+            rxs = rxs + [_stem_rx(en_of[team])]
+        for q, hl, gl, ceid in queries:
+            res = _gn_fetch(q, hl, gl, ceid)
+            time.sleep(pause)
+            if res is None:
+                fails += 1
+                if fails >= 6:
+                    report["errors"].append("Google News: za dużo błędów, przerywam")
+                    break
+                continue
+            fails, kept = 0, 0
+            for it in res:
+                if kept >= per_team or not it["title"]:
+                    continue
+                if it["published"] and it["published"] < since:
+                    continue
+                t = norm(it["title"])
+                if GN_NOISE.search(it["title"]) or (GN_FIXTURE.match(it["title"]) and len(it["title"].split()) <= 7) \
+                        or not any(rx.search(t) for rx in rxs):
+                    continue
+                items.append({"teams": [team], "leagues": [league_of[team]], "source": it["source"], "title": it["title"],
+                              "summary": "", "url": it["url"], "published": iso(it["published"]) if it["published"] else None})
+                kept += 1
+        if fails >= 6:
+            break
+        done += 1
+    report.setdefault("news", {})["google_news_teams"] = done
+    report["news"]["google_news_items"] = len(items)
+    return items
 
 
 def http_get_text(url, timeout=20):
