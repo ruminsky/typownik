@@ -69,6 +69,15 @@ CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wy
                        r"visit\w*|odwiedzi\w*|charity|charytat\w*|students|anniversary|rocznic\w*)", re.I)
 
 
+LIVE = re.compile(r"(live|na żywo|aktualizacj\w* na żywo|minute by minute|as it happened|relacja)", re.I)
+
+
+def LOWVALUE(t):
+    letters = [ch for ch in t if ch.isalpha()]
+    caps = sum(ch.isupper() for ch in letters) / max(1, len(letters))
+    return caps > 0.6 and len(letters) > 15 or bool(LIVE.search(t))
+
+
 def category(text):
     for name, rx in CATEGORIES:
         if rx.search(text or ""):
@@ -97,7 +106,7 @@ def main():
     changes = []
     for c in cands:
         title, summ = (c.get("title") or "").strip(), c.get("summary") or ""
-        if not title or PRIVATE.search(title) or CLICKBAIT.search(title):
+        if not title or PRIVATE.search(title) or CLICKBAIT.search(title) or LOWVALUE(title):
             continue
         tnorm = tf.norm(title)
         in_title = [t for t in c.get("teams", []) if any(rx.search(tnorm) for rx in (tf.news_rx().get(t) or [tf._stem_rx(t)]))]
@@ -151,7 +160,7 @@ def main():
                 fresh = []
                 for n in kb[key]:
                     if n.get("auto"):
-                        if CLICKBAIT.search(n.get("text") or ""):
+                        if CLICKBAIT.search(n.get("text") or "") or LOWVALUE(n.get("text") or ""):
                             continue
                         n["cat"] = n.get("cat") or category(n.get("text"))
                         if not n["cat"]:

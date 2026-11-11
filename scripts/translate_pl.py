@@ -50,6 +50,35 @@ def prepare(t):
     return BBC_PREFIX.sub("", t), True
 
 
+EN_KEEP_CATS = {"Kontuzja", "Trener", "Dyscyplina", "Sytuacja w klubie"}  # from English sources only what matters for a match
+NAME_RX = re.compile(r"\b(?:[A-Z][\w'’.-]*)(?:\s+(?:de|da|van|von|di|del|la|le)?\s*[A-Z][\w'’.-]*)+\b")
+KNOWN = ["Man City", "Man Utd", "Man United", "Spurs", "Barca", "PSG", "Inter", "AC Milan", "Juve", "Real Madrid",
+         "Atletico", "Bayern", "Dortmund", "Leverkusen", "Liverpool", "Arsenal", "Chelsea", "Newcastle", "Everton",
+         "Fulham", "Brentford", "Brighton", "Wolves", "Villa", "Leeds", "Sunderland", "Celtic", "Rangers"]
+
+
+def protect(text):
+    """Replace club and player names with numbered tokens so the translator cannot mangle them."""
+    names = []
+
+    def keep(m):
+        names.append(m.group(0))
+        return f"[{len(names)}]"
+    for k in sorted(KNOWN, key=len, reverse=True):
+        text = re.sub(r"\b" + re.escape(k) + r"\b", keep, text)
+    text = NAME_RX.sub(lambda m: m.group(0) if m.group(0).startswith("[") else keep(m), text)
+    return text, names
+
+
+def restore(text, names):
+    for i, n in enumerate(names, 1):
+        tok = f"[{i}]"
+        if tok not in text:
+            return None  # the translator lost a name – do not show a garbled sentence
+        text = text.replace(tok, n)
+    return re.sub(r"\s+", " ", text).strip()
+
+
 def load_cache():
     try:
         return json.load(open(CACHE, encoding="utf-8"))
@@ -109,7 +138,8 @@ def main():
         if fn is None:
             continue
         try:
-            out = fn(text).strip()
+            prot, names = protect(text)
+            out = restore(fn(prot).strip(), names)
             if out and out != text:
                 cache[t] = out
                 done += 1
@@ -125,7 +155,22 @@ def main():
     for kb in T.get("teams", {}).values():
         for key in ("news", "rumours"):
             keep = []
+            seen = set()
+            translated = set(cache.values())
             for n in kb.get(key) or []:
+                txt = BBC_PREFIX.sub("", n.get("text") or "") if not (n.get("text") or "").startswith("Plotki transferowe") else n.get("text")
+                n["text"] = txt
+                if not txt or txt in seen:
+                    dropped += 1
+                    continue
+                english_origin = is_en(txt, n.get("lang")) or txt in translated
+                if english_origin and n.get("cat") not in EN_KEEP_CATS and not txt.startswith("Plotki transferowe"):
+                    dropped += 1  # transfer/form/squad items come from Polish sources, which read naturally
+                    continue
+                if "Miasto" in txt and txt in translated:
+                    dropped += 1  # old translation that mangled "City"
+                    continue
+                seen.add(txt)
                 if is_en(n.get("text"), n.get("lang")):
                     if n.get("text") not in cache:
                         dropped += 1
