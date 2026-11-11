@@ -548,7 +548,7 @@ function whyPanel(m,p,full){
     ${coachNewsHtml(m)}
     <div class="f2">Remis: <b>${pct(p.fin.d)}</b>${p.fin.d>=0.28?", bo to wyrównany mecz":""}. Oczekiwane gole: ${esc(m.home.name)} <b>${dec(p.lh,2)}</b>, ${esc(m.away.name)} <b>${dec(p.la,2)}</b>.</div>
     <div class="f2">Kurs opłaca się od: 1 · <b>${fo("h")}</b>, X · <b>${fo("d")}</b>, 2 · <b>${fo("a")}</b>${settings.tax?" (z 12% podatkiem)":""}</div>
-    ${m.odds&&m.odds.h?`<div class="f2">Rynek${m.odds.n?` (mediana ${m.odds.n} bukm., bez marży)`:""}: 1 · <b>${dec(+m.odds.h,2)}</b>, X · <b>${dec(+m.odds.d,2)}</b>, 2 · <b>${dec(+m.odds.a,2)}</b>${m.odds.betclic?`. Betclic FR: ${dec(+m.odds.betclic.h,2)} / ${dec(+m.odds.betclic.d,2)} / ${dec(+m.odds.betclic.a,2)}`:""}</div>`:""}
+    ${m.odds&&m.odds.h?`<div class="f2">Rynek${m.odds.n?` (mediana z ${m.odds.n} bukmacherów, bez marży)`:""}: 1 · <b>${dec(+m.odds.h,2)}</b>, X · <b>${dec(+m.odds.d,2)}</b>, 2 · <b>${dec(+m.odds.a,2)}</b>${m.odds.betclic?`. Betclic (Francja): ${dec(+m.odds.betclic.h,2)} / ${dec(+m.odds.betclic.d,2)} / ${dec(+m.odds.betclic.a,2)}`:""}</div>`:""}
     ${missingNote(p)?`<div class="f2">${esc(missingNote(p))}</div>`:""}
     ${full?"":`<button class="open" data-id="${esc(m.id)}">Pełna analiza ›</button>`}
   </div>`;
@@ -568,7 +568,7 @@ const pickHtml=(p,tp)=>`<div class="mc-pick"><div class="t"><small>Typ ${esc(tp.
 function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
   return `<article class="mcard">
   <button class="cmain" data-id="${esc(m.id)}" aria-label="${esc(m.home.name)} – ${esc(m.away.name)}: pełna analiza">
-    <div class="mc-top"><span class="l">${BALL}${esc(LMAP[m.league]?.name||"")}</span>${v&&v.e>0.05?`<span class="vbadge">Value ${v.lab} +${Math.round(v.e*100)}%</span>`:""}</div>
+    <div class="mc-top"><span class="l">${BALL}${esc(LMAP[m.league]?.name||"")}</span>${v&&v.e>0.05?`<span class="vbadge">Okazja ${v.lab} +${Math.round(v.e*100)}%</span>`:""}</div>
     ${teamsHtml(m,40)}
     ${pickHtml(p,tp)}
     ${ybtns(m,p,tp,false)}
@@ -578,7 +578,7 @@ function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
 function listRow(m,p){ const tp=tipOf(p), v=bestValue(m,p); const team=tp.cls==="a"?m.away:m.home;
   return `<details class="lrow"><summary>
     <div class="lr-top"><span>${esc(m.home.name)} – ${esc(m.away.name)}</span><span class="num">${esc(shortDay(m.kickoff))} · ${fmtTime(m.kickoff)}</span></div>
-    <div class="lr-main"><span class="pk">${crest(team.name,20)}<b>${esc(tp.text)}</b><em>typ ${esc(tp.code)}</em></span>${v&&v.e>0.05?`<span class="vbadge">Value</span>`:""}<span class="pp num">${pct(tp.p)}</span><span class="chev"></span></div>
+    <div class="lr-main"><span class="pk">${crest(team.name,20)}<b>${esc(tp.text)}</b><em>typ ${esc(tp.code)}</em></span>${v&&v.e>0.05?`<span class="vbadge">Okazja</span>`:""}<span class="pp num">${pct(tp.p)}</span><span class="chev"></span></div>
   </summary><div class="lr-body">${ybtns(m,p,tp,true)}${whyPanel(m,p,false)}</div></details>`; }
 
 /* ================= VIEWS ================= */
@@ -718,8 +718,8 @@ function renderDetail(id){
     <div class="scroll">${heat}</div>
   </div></details>
 
-  <details class="sec"><summary>Kursy Betclic i value <span class="chev"></span></summary><div class="in">
-    ${m.odds?.betclic?`<div class="note">Betclic FR z bazy: <b class="num" style="color:var(--ink)">${dec(+m.odds.betclic.h,2)} / ${dec(+m.odds.betclic.d,2)} / ${dec(+m.odds.betclic.a,2)}</b>. Kursy w polskiej aplikacji mogą się różnić, więc wpisz te, które widzisz.</div>`:""}
+  <details class="sec"><summary>Kursy Betclic i okazje <span class="chev"></span></summary><div class="in">
+    ${m.odds?.betclic?`<div class="note">Betclic (Francja) z bazy: <b class="num" style="color:var(--ink)">${dec(+m.odds.betclic.h,2)} / ${dec(+m.odds.betclic.d,2)} / ${dec(+m.odds.betclic.a,2)}</b>. Kursy w polskiej aplikacji mogą się różnić, więc wpisz te, które widzisz.</div>`:""}
     <div class="odds">
       <label for="o-h">1<input id="o-h" inputmode="decimal" placeholder="${m.odds?.betclic?dec(+m.odds.betclic.h,2):"—"}" value="${esc(o.h)}"></label>
       <label for="o-d">X<input id="o-d" inputmode="decimal" placeholder="${m.odds?.betclic?dec(+m.odds.betclic.d,2):"—"}" value="${esc(o.d)}"></label>
@@ -791,7 +791,7 @@ function renderSettings(){
   </section>
   <section class="panel"><h3>Model i kursy</h3>
     <div class="slider"><label for="s-mk">Waga kursów rynkowych: <b id="s-mk-v">${Math.round(settings.market*100)}%</b></label><input type="range" id="s-mk" min="0" max="60" step="5" value="${settings.market*100}">
-    <div class="note">Kursy rynkowe zawierają wiedzę tysięcy graczy. Domieszka 20–30% zwykle poprawia trafność. Ustaw 0%, jeśli szukasz value, czyli rozbieżności z bukmacherem.</div></div>
+    <div class="note">Kursy rynkowe zawierają wiedzę tysięcy graczy. Domieszka 20–30% zwykle poprawia trafność. Ustaw 0%, jeśli szukasz okazji, czyli rozbieżności z bukmacherem.</div></div>
     <div class="slider"><label for="s-sh">Ostrożność przy małej próbce: <b id="s-sh-v">${settings.shrinkK}</b></label><input type="range" id="s-sh" min="0" max="12" step="1" value="${settings.shrinkK}">
     <div class="note">Na początku sezonu statystyki drużyn są mocniej ściągane do średniej ligowej.</div></div>
     <label class="tg" for="s-tax"><span>Podatek od gier 12%<span class="note" style="display:block;font-weight:400">Od stawki odliczane jest 12% (10 zł gra jak 8,80 zł). Wyłącz, jeśli Twój kupon jest bez podatku, np. w promocji bukmachera.</span></span><input type="checkbox" class="sw" id="s-tax" ${settings.tax?"checked":""}></label>
@@ -801,7 +801,7 @@ function renderSettings(){
     <p class="prose"><b>Typ</b>: gdy żaden wynik nie ma wyraźnej przewagi, aplikacja proponuje bezpieczniejszą podwójną szansę (1X albo X2).</p>
     <p class="prose"><b>Gwiazdki (1–5)</b>: jak mocny jest typ. Przy niepełnych danych liczba gwiazdek jest obniżana.</p>
     <p class="prose"><b>Dlaczego taki typ?</b> Rozwiń pasek pod meczem, a zobaczysz, co przemawia za faworytem, dlaczego rywal ma mniejsze szanse i co może pójść inaczej.</p>
-    <p class="prose"><b>Kurs opłaca się od</b>: jeśli Betclic daje wyższy kurs, zakład ma wartość według modelu. Na dłuższą metę opłacają się tylko takie zakłady.</p>
+    <p class="prose"><b>Kurs opłaca się od (okazja)</b>: jeśli Betclic daje wyższy kurs, zakład ma wartość według modelu. Na dłuższą metę opłacają się tylko takie zakłady.</p>
     <p class="prose"><b>Herby</b> pochodzą z TheSportsDB. Klub bez herbu ma tarczę w swoich barwach.</p></div></section>`;
   document.querySelectorAll("[data-lg]").forEach(c=>c.onchange=()=>{ c.checked?sel.add(c.dataset.lg):sel.delete(c.dataset.lg); store.set("leagues3",[...sel]); });
   const mk=$("#s-mk"), sh=$("#s-sh");
