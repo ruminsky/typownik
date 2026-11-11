@@ -109,7 +109,7 @@ FEEDS = [("Przegląd Sportowy", "https://przegladsportowy.onet.pl/.feed"),
          ("TVP Sport", "https://sport.tvp.pl/rss"),
          ("Polsat Sport", "https://www.polsatsport.pl/rss/pilkanozna.xml"),
          ("pilkanozna.pl", "https://pilkanozna.pl/feed"),
-         ("BBC Sport", "https://feeds.bbci.co.uk/sport/football/rss.xml")]
+         ]  # BBC (English) removed: the app shows Polish sources only
 # Names Polish media use for clubs (matched with Polish case endings, e.g. "Bayernu", "Realem").
 NEWS_ALIASES = {
     "Real Madryt": ["real madryt", "realu madryt", "realem madryt"], "Barcelona": ["fc barcelona", "barcelona", "barca"],
@@ -288,12 +288,13 @@ def team_news(docs, report, days_ahead=14, per_team=8, pause=0.6):
     items, fails, done = [], 0, 0
     for team in order:
         nation = league_of[team] in NATION_LEAGUES
+        # Polish sources only: machine-translated English headlines read badly
         if nation:
-            queries = [(f'"{en_of.get(team, team)}" football when:5d', "en-GB", "GB", "GB:en")]
+            queries = [(f'"{team}" (reprezentacja OR kadra OR selekcjoner OR kontuzja OR powołania) when:5d', "pl", "PL", "PL:pl")]
         else:
             pl_q = (NEWS_ALIASES.get(team) or [team])[0]
-            en_q = (ALIASES.get(team) or [team])[0] if team in ("Bayern Monachium", "Real Madryt", "Atlético Madryt") else team
-            queries = [(f'"{pl_q}" (mecz OR trener OR liga OR gol OR transfer OR piłkarz OR kontuzja) when:5d', "pl", "PL", "PL:pl"), (f'"{en_q}" (football OR soccer) when:3d', "en-GB", "GB", "GB:en")]
+            queries = [(f'"{pl_q}" (trener OR kontuzja OR uraz OR zawieszenie OR kartka OR kadra OR szatnia OR zwolniony) when:5d',
+                        "pl", "PL", "PL:pl")]
         rxs = news_rx().get(team) or [_stem_rx(team)]
         if nation and team in en_of:
             rxs = rxs + [_stem_rx(en_of[team])]

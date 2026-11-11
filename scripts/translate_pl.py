@@ -50,7 +50,7 @@ def prepare(t):
     return BBC_PREFIX.sub("", t), True
 
 
-EN_KEEP_CATS = {"Kontuzja", "Trener", "Dyscyplina", "Sytuacja w klubie"}  # from English sources only what matters for a match
+EN_KEEP_CATS = set()  # machine translations read badly: English-origin headlines are never shown
 NAME_RX = re.compile(r"\b(?:[A-Z][\w'’.-]*)(?:\s+(?:de|da|van|von|di|del|la|le)?\s*[A-Z][\w'’.-]*)+\b")
 KNOWN = ["Man City", "Man Utd", "Man United", "Spurs", "Barca", "PSG", "Inter", "AC Milan", "Juve", "Real Madrid",
          "Atletico", "Bayern", "Dortmund", "Leverkusen", "Liverpool", "Arsenal", "Chelsea", "Newcastle", "Everton",
