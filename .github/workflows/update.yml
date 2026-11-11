@@ -74,4 +74,5 @@ jobs:
           git add docs state
           if git diff --cached --quiet; then echo "Brak zmian"; exit 0; fi
           git commit -m "Aktualizacja danych $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push
+          for i in 1 2 3; do git pull --rebase -q && git push && exit 0; sleep 10; done
+          exit 1
