@@ -47,6 +47,35 @@ TRANSFER = re.compile(r"(transfer\w*|sign\w*|bid|kupi\w*|sprowadz\w*|wypożycz\w
 POS = re.compile(r"(wraca\w*|powr[óo]t\w*|seria zwycięstw|w formie|błyszczy|hat-trick|wzmocni\w*|return\w*|boost|"
                  r"fit again|back in training|zwycięsk\w* seri\w*|rekord\w*|lider\w*)", re.I)
 
+# every stored item must be about something that can matter for a match; otherwise it is dropped
+CATEGORIES = [
+    ("Kontuzja", re.compile(r"(kontuzj\w*|uraz\w*|injur\w*|ruled out|wypada|nie zagra|pauzuj\w*|out for|opuści\w* zgrupowanie|"
+                            r"wraca po|powr[óo]t po|fit again|back in training|hamstring|knee|ankle|surgery|operacj\w*|badani\w*)", re.I)),
+    ("Trener", re.compile(COACH + r"|zwolni\w*|dymisj\w*|sacked|appointed|ławk\w* trenersk\w*", re.I)),
+    ("Dyscyplina", re.compile(r"(kartk\w*|czerwon\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bbanned|\bban\b|kara\w* dla)", re.I)),
+    ("Forma", re.compile(r"(kryzys\w*|seri\w* (zwycięstw|porażek|meczów)|porażk\w*|zwycięstw\w*|wygra\w*|przegra\w*|remis\w*|"
+                         r"form\w*|crisis|slump|streak|unbeaten|winless|going wrong|struggl\w*|defeat|thrash\w*|"
+                         r"comeback|beat\w*|draw\w*|win\b|wins\b|lost\b|loses\b|tabel\w*|lider\w*|top of|bottom of)", re.I)),
+    ("Transfer", TRANSFER),
+    ("Kadra", re.compile(r"(powoła\w*|kadr\w*|squad (announced|named|for)|named in .{0,20}squad|call-?up|selection|skład na mecz|wyjściow\w* skład|debiut\w*)", re.I)),
+    ("Sytuacja w klubie", re.compile(r"(konflikt\w*|bunt\w*|szatni\w*|finans\w*|zaległ\w*|wypłat\w*|protest\w*|kibic\w*|zarząd\w*|"
+                                     r"właściciel\w*|prezes\w*|board|owner\w*|takeover|charged|zarzut\w*|appeal|odwoła\w*|"
+                                     r"punish\w*|ukaran\w*|fans|unrest|row\b|dressing room)", re.I)),
+]
+CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wygląda|niesamowit\w*|szok\w*|wow|"
+                       r"you won.t believe|watch|quiz|ranking|top \d+)\b|zarobk\w*|pensj\w*|ile zarabia|mógł trafić|"
+                       r"nie uwierzysz|kulisy|wspomina|wspomnie\w*|jak dziś|lat temu|throwback|on this day|"
+                       r"fryzur\w*|tatuaż\w*|samoch[oó]d|willa|dom za|wakacj\w*|instagram|tiktok|museum|muzeum|team photo|zdjęci\w*|"
+                       r"visit\w*|odwiedzi\w*|charity|charytat\w*|students|anniversary|rocznic\w*)", re.I)
+
+
+def category(text):
+    for name, rx in CATEGORIES:
+        if rx.search(text or ""):
+            return name
+    return None
+
+
 
 def now():
     return dt.datetime.now(dt.timezone.utc)
@@ -68,7 +97,7 @@ def main():
     changes = []
     for c in cands:
         title, summ = (c.get("title") or "").strip(), c.get("summary") or ""
-        if not title or PRIVATE.search(title):
+        if not title or PRIVATE.search(title) or CLICKBAIT.search(title):
             continue
         tnorm = tf.norm(title)
         in_title = [t for t in c.get("teams", []) if any(rx.search(tnorm) for rx in (tf.news_rx().get(t) or [tf._stem_rx(t)]))]
@@ -101,7 +130,10 @@ def main():
             imp = -1
         elif status == "nowy":
             imp = 1
-        item = {"text": text, "impact": imp, "date": c.get("published") or stamp, "source": c.get("source"),
+        cat = "Trener" if status else category(title + " " + summ[:160])
+        if not cat:
+            continue  # not about anything that can affect a match
+        item = {"text": text, "impact": imp, "cat": cat, "date": c.get("published") or stamp, "source": c.get("source"),
                 "url": c.get("url"), "auto": True}
         key = "rumours" if rumour else "news"
         other = "news" if rumour else "rumours"
@@ -115,7 +147,17 @@ def main():
         kb["updatedAt"] = stamp
     for kb in teams.values():
         for key in ("news", "rumours"):
-            if key in kb:
+            if key in kb:  # older automatic items get the same filters and a category
+                fresh = []
+                for n in kb[key]:
+                    if n.get("auto"):
+                        if CLICKBAIT.search(n.get("text") or ""):
+                            continue
+                        n["cat"] = n.get("cat") or category(n.get("text"))
+                        if not n["cat"]:
+                            continue
+                    fresh.append(n)
+                kb[key] = fresh
                 kb[key] = sorted([n for n in kb[key] if (n.get("date") or stamp) >= cut],
                                  key=lambda n: n.get("date") or "", reverse=True)[:6]
         co = kb.get("coach") or {}
