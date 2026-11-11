@@ -48,19 +48,25 @@ POS = re.compile(r"(wraca\w*|powr[óo]t\w*|seria zwycięstw|w formie|błyszczy|h
                  r"fit again|back in training|zwycięsk\w* seri\w*|rekord\w*|lider\w*)", re.I)
 
 # every stored item must be about something that can matter for a match; otherwise it is dropped
-CATEGORIES = [
+CATEGORIES = [  # only news that change who plays or the situation of a team before the match
     ("Kontuzja", re.compile(r"(kontuzj\w*|uraz\w*|injur\w*|ruled out|wypada|nie zagra|pauzuj\w*|out for|opuści\w* zgrupowanie|"
-                            r"wraca po|powr[óo]t po|fit again|back in training|hamstring|knee|ankle|surgery|operacj\w*|badani\w*)", re.I)),
-    ("Trener", re.compile(COACH + r"|zwolni\w*|dymisj\w*|sacked|appointed|ławk\w* trenersk\w*", re.I)),
+                            r"wraca po|powr[óo]t po|wraca do treningów|wznowił\w* trening\w*|fit again|back in training|"
+                            r"back from injury|returns? from injury|available again|niedostępn\w*|unavailable|a doubt|doubt for|"
+                            r"niepewn\w* (występ|start)|hamstring|knee|ankle|surgery|operacj\w*)", re.I)),
     ("Dyscyplina", re.compile(r"(kartk\w*|czerwon\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bbanned|\bban\b|kara\w* dla)", re.I)),
-    ("Forma", re.compile(r"(kryzys\w*|seri\w* (zwycięstw|porażek|meczów)|porażk\w*|zwycięstw\w*|wygra\w*|przegra\w*|remis\w*|"
-                         r"form\w*|crisis|slump|streak|unbeaten|winless|going wrong|struggl\w*|defeat|thrash\w*|"
-                         r"comeback|beat\w*|draw\w*|win\b|wins\b|lost\b|loses\b|tabel\w*|lider\w*|top of|bottom of)", re.I)),
-    ("Transfer", TRANSFER),
-    ("Kadra", re.compile(r"(powoła\w*|kadr\w*|squad (announced|named|for)|named in .{0,20}squad|call-?up|selection|skład na mecz|wyjściow\w* skład|debiut\w*)", re.I)),
-    ("Sytuacja w klubie", re.compile(r"(konflikt\w*|bunt\w*|szatni\w*|finans\w*|zaległ\w*|wypłat\w*|protest\w*|kibic\w*|zarząd\w*|"
-                                     r"właściciel\w*|prezes\w*|board|owner\w*|takeover|charged|zarzut\w*|appeal|odwoła\w*|"
-                                     r"punish\w*|ukaran\w*|fans|unrest|row\b|dressing room)", re.I)),
+    ("Trener", re.compile(COACH + r".{0,60}(zwolni\w*|dymisj\w*|sack\w*|presj\w*|pressure|nowy|new|appoint\w*|zawiesz\w*|ban\w*|"
+                          r"chor\w*|\bill\b|nieobecn\w*|absent|odejdzie|odejść|leave|resign\w*|rezygn\w*|przyszłoś\w*|future|"
+                          r"ultimatum|ostatni\w* szans\w*|na wylocie|kandydat\w*|candidate|replace\w*|zastąpi\w*|następc\w*)|"
+                          r"(zwolni\w*|dymisj\w*|sack\w*|appointed|nowym trenerem|new (head )?coach|new manager|replace\w*|zastąpi\w*).{0,60}" + COACH, re.I)),
+    ("Sytuacja w klubie", re.compile(r"(konflikt\w*|bunt\w*|w szatni|dressing room|zaległ\w* (pensj|wypłat)\w*|nie otrzymal\w* (pensji|wypłat)|"
+                                     r"unpaid wages|protest\w* kibic\w*|kibic\w* protest\w*|fans? protest\w*|boycott|bojkot\w*|"
+                                     r"odsunięt\w*|odstawion\w*|frozen out|transfer request|chce odejść|wants out|"
+                                     r"refus\w* to (train|play)|odmawia\w* (gry|trening)|strajk\w*|ujemn\w* punkt\w*|"
+                                     r"points? deduct\w*|odjęci\w* punktów|zakaz transferow\w*|transfer ban|administration|"
+                                     r"upadłoś\w*|takeover|nowy właściciel|sprzedaż klubu|charged|zarzut\w*)", re.I)),
+    ("Kadra", re.compile(r"(powołan\w*|pominięt\w*|nie znalazł\w* się w kadrze|poza kadrą|left out|omitted|dropped from|"
+                         r"\brested\b|odpocz\w*|rotacj\w*|oszczędzan\w*|squad (announced|named)|named in .{0,20}squad|call-?up|"
+                         r"wyjściow\w* skład|w pierwszym składzie|na ławce)", re.I)),
 ]
 CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wygląda|niesamowit\w*|szok\w*|wow|"
                        r"you won.t believe|watch|quiz|ranking|top \d+)\b|zarobk\w*|pensj\w*|ile zarabia|mógł trafić|"
@@ -70,12 +76,14 @@ CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wy
 
 
 LIVE = re.compile(r"(live|na żywo|aktualizacj\w* na żywo|minute by minute|as it happened|relacja)", re.I)
+SEO = re.compile(r"(kto wygrał|wynik meczu|wynik, kto|\d{1,2}\.\d{1,2}\.\d{4}|kim jest|who is|przewidywan\w*|zapowied\w*|"
+                 r"preview|gdzie obejrze\w*|\btypy\b|prediction\w*|predicted|przewidywany skład|player ratings|oceny)", re.I)
 
 
 def LOWVALUE(t):
     letters = [ch for ch in t if ch.isalpha()]
     caps = sum(ch.isupper() for ch in letters) / max(1, len(letters))
-    return caps > 0.6 and len(letters) > 15 or bool(LIVE.search(t))
+    return caps > 0.6 and len(letters) > 15 or bool(LIVE.search(t)) or bool(SEO.search(t))
 
 
 def category(text):
@@ -162,7 +170,8 @@ def main():
                     if n.get("auto"):
                         if CLICKBAIT.search(n.get("text") or "") or LOWVALUE(n.get("text") or ""):
                             continue
-                        n["cat"] = n.get("cat") or category(n.get("text"))
+                        n["cat"] = "Trener" if n.get("cat") == "Trener" and (kb.get("coach") or {}).get("note") == n.get("text") \
+                            else category(n.get("text"))  # stricter rules apply to stored items too
                         if not n["cat"]:
                             continue
                     fresh.append(n)
