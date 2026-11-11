@@ -1,8 +1,8 @@
 {
- "updatedAt": "2026-11-09T21:50:29Z",
+ "updatedAt": "2026-11-11T10:33:41Z",
  "source": "https://www.eloratings.net/World.tsv",
  "namesSource": "https://www.eloratings.net/en.teams.tsv",
- "sourceLastModified": "2026-11-09T19:12:47Z",
+ "sourceLastModified": "2026-11-11T09:43:27Z",
  "count": 244,
  "teams": {
   "Spain": {
@@ -73,7 +73,7 @@
   },
   "Norway": {
    "code": "NO",
-   "rating": 1900,
+   "rating": 1901,
    "rank": 12,
    "pl": "Norwegia"
   },
@@ -151,7 +151,7 @@
   },
   "United States": {
    "code": "US",
-   "rating": 1793,
+   "rating": 1792,
    "rank": 25,
    "pl": "USA"
   },
@@ -577,7 +577,7 @@
   },
   "Kurdistan": {
    "code": "KD",
-   "rating": 1424,
+   "rating": 1423,
    "rank": 96,
    "pl": "Kurdystan"
   },
@@ -811,7 +811,7 @@
   },
   "Namibia": {
    "code": "NA",
-   "rating": 1305,
+   "rating": 1306,
    "rank": 135,
    "pl": "Namibia"
   },
@@ -925,7 +925,7 @@
   },
   "Mayotte": {
    "code": "YT",
-   "rating": 1216,
+   "rating": 1217,
    "rank": 154,
    "pl": "Majotta"
   },
@@ -1171,7 +1171,7 @@
   },
   "Sint Maarten": {
    "code": "SX",
-   "rating": 929,
+   "rating": 932,
    "rank": 195,
    "pl": "Sint Maarten"
   },
@@ -1213,7 +1213,7 @@
   },
   "Dominica": {
    "code": "DM",
-   "rating": 885,
+   "rating": 884,
    "rank": 202,
    "pl": "Dominika"
   },
@@ -1387,7 +1387,7 @@
   },
   "Anguilla": {
    "code": "AI",
-   "rating": 615,
+   "rating": 612,
    "rank": 231,
    "pl": "Anguilla"
   },
