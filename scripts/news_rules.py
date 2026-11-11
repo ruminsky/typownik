@@ -57,8 +57,8 @@ CATEGORIES = [  # only news that change who plays or the situation of a team bef
                             r"back from injury|returns? from injury|available again|niedostępn\w*|unavailable|a doubt|doubt for|"
                             r"niepewn\w* (występ|start)|hamstring|knee|ankle|surgery|operacj\w*)", re.I)),
     ("Dyscyplina", re.compile(r"(kartk\w*|czerwon\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bbanned|\bban\b|kara\w* dla)", re.I)),
-    ("Trener", re.compile(COACH + r".{0,60}(zwolni\w*|dymisj\w*|sack\w*|presj\w*|pressure|nowy|new|appoint\w*|zawiesz\w*|ban\w*|"
-                          r"chor\w*|\bill\b|nieobecn\w*|absent|odejdzie|odejść|leave|resign\w*|rezygn\w*|przyszłoś\w*|future|"
+    ("Trener", re.compile(COACH + r".{0,60}(zwolni\w*|dymisj\w*|sack\w*|presj\w*|pressure|\bnow(y|ego|ym)\b|\bnew\b|appoint\w*|"
+                          r"zawiesz\w*|\bban(ned)?\b|\bchor(y|ego|ym|uje|ował\w*|ob\w*)\b|\bill\b|nieobecn\w*|absent|odejdzie|odejść|leave|resign\w*|rezygn\w*|przyszłoś\w*|future|"
                           r"ultimatum|ostatni\w* szans\w*|na wylocie|kandydat\w*|candidate|replace\w*|zastąpi\w*|następc\w*)|"
                           r"(zwolni\w*|dymisj\w*|sack\w*|appointed|nowym trenerem|new (head )?coach|new manager|replace\w*|zastąpi\w*).{0,60}" + COACH, re.I)),
     ("Sytuacja w klubie", re.compile(r"(konflikt\w*|bunt\w*|w szatni|dressing room|zaległ\w* (pensj|wypłat)\w*|nie otrzymal\w* (pensji|wypłat)|"
@@ -95,7 +95,7 @@ YOUTH = re.compile(r"(\bU-?(1[5-9]|2[0-3])\b|junior\w*|młodzieżow\w*|rezerw\w*
                    r"\bwomen\b|\bWSL\b|femen\w*)", re.I)
 OTHER_SPORT = re.compile(r"(krykiet\w*|cricket|\bTests?\b|rugby|siatk\w*|koszyk\w*|hokej\w*|\bNBA\b|\bNFL\b|tenis\w*|"
                          r"żużl\w*|piłk\w* ręczn\w*|szczypiorn\w*|futsal|e-?sport\w*|\bF1\b|formuł\w* 1|boks\w*|\bMMA\b|"
-                         r"\bUFC\b|golf\w*)", re.I)
+                         r"\bUFC\b|golf\w*|fina(ł|le)\w* MŚ)", re.I)
 # match reports: a score, VAR / referee talk or "two goals and a red card" says nothing about the next match
 REPORT = re.compile(r"(\b\d{1,2}\s?:\s?\d{1,2}\b|\b\d{1,2}-\d{1,2}\b|\bVAR\b|sędzi\w*|skrót\w*|highlights|"
                     r"\b(dwa|trzy|cztery|pięć) gol\w*|gol\w* i czerwon\w*)", re.I)
@@ -104,7 +104,7 @@ FORMER = re.compile(r"(\bby[łl]\w* (trener|szkoleniow|menedżer|piłkarz|zawodn
                     r"kapitan|prezes|selekcjoner)\w*|\bex-|\bformer\b|legend\w*|emeryt\w*|zakończ\w* karier\w*|"
                     r"wspomin\w*|wywiad\w*|podcast\w*|obudził\w*)", re.I)
 # a team right after these words is the opponent, not the subject ("przed Atalantą", "nie zagra z Troyes")
-OPPONENT_WORDS = {"przed", "przeciwko", "z", "ze", "vs", "v", "versus", "against", "kontra", "nad",
+OPPONENT_WORDS = {"przed", "przeciwko", "z", "ze", "vs", "v", "versus", "against", "kontra", "nad", "nie",
                   "rywal", "rywala", "rywalem", "rywalami"}
 _KNOWN = []
 
