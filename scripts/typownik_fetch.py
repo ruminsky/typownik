@@ -44,6 +44,13 @@ AF_LEAGUE_REV = {v: k for k, v in AF_LEAGUE.items()}
 
 # Our display names (as stored in the database) -> other spellings used by data providers.
 ALIASES = {
+    # cup clubs shown under their Polish names; providers use the English ones
+    "AEK Ateny": ["aek athens", "aek"], "FC Kopenhaga": ["fc copenhagen", "kobenhavn", "fc kobenhavn", "copenhagen"],
+    "Slavia Praga": ["slavia prague", "slavia praha"], "Sparta Praga": ["sparta prague", "sparta praha"],
+    "Sporting Lizbona": ["sporting lisbon", "sporting cp", "sporting"], "Szachtar Donieck": ["shakhtar donetsk", "shakhtar"],
+    "Lech Poznań": ["lech poznan"], "Jagiellonia Białystok": ["jagiellonia bialystok", "jagiellonia"],
+    "Olympiakos Pireus": ["olympiakos fc", "olympiacos", "olympiakos", "olympiacos piraeus"],
+    "Omonia Nikozja": ["omonia nicosia", "omonia"], "Viktoria Pilzno": ["fc viktoria plzen", "viktoria plzen", "plzen"],
     # Premier League
     "Arsenal": ["arsenal fc"], "Brighton": ["brighton and hove albion", "brighton hove albion", "brighton & hove albion"],
     "Manchester City": ["man city"], "Liverpool": [], "Chelsea": [], "Everton": [], "Bournemouth": ["afc bournemouth"],
@@ -639,7 +646,10 @@ def fetch_af(docs, key, budget, report, patches, team_patches=None, h2h_cap=25):
     SEARCH = {"Bayern Monachium": "Bayern", "Real Madryt": "Real Madrid", "Atlético Madryt": "Atletico Madrid",
               "1. FC Köln": "Koln", "Borussia M'gladbach": "Monchengladbach", "Milan": "AC Milan", "PSG": "Paris Saint Germain",
               "Deportivo La Coruña": "Deportivo La Coruna", "Alavés": "Alaves", "Málaga": "Malaga", "Hamburger SV": "Hamburger",
-              "Atalanta": "Atalanta", "Inter": "Inter"}
+              "Atalanta": "Atalanta", "Inter": "Inter", "AEK Ateny": "AEK Athens", "FC Kopenhaga": "FC Copenhagen",
+              "Slavia Praga": "Slavia Praha", "Sparta Praga": "Sparta Praha", "Sporting Lizbona": "Sporting CP",
+              "Szachtar Donieck": "Shakhtar Donetsk", "Lech Poznań": "Lech Poznan", "Jagiellonia Białystok": "Jagiellonia",
+              "Olympiakos Pireus": "Olympiakos", "Omonia Nikozja": "Omonia Nicosia", "Viktoria Pilzno": "Plzen"}
     searched = 0
     tid_of = {}
     for doc in sorted(docs, key=lambda d: -(docs[d].get("popularity") or 0)):

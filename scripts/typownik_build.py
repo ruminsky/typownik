@@ -55,7 +55,12 @@ DISPLAY = {"Brighton and Hove Albion": "Brighton", "Tottenham Hotspur": "Tottenh
            "Inter Milan": "Inter", "AC Milan": "Milan", "Bayern Munich": "Bayern Monachium", "Cologne": "1. FC Köln",
            "Monchengladbach": "Borussia M'gladbach", "1. FC Union Berlin": "Union Berlin", "SC Paderborn 07": "Paderborn",
            "SV 07 Elversberg": "Elversberg", "TSG Hoffenheim": "Hoffenheim", "SC Freiburg": "Freiburg", "FC Augsburg": "Augsburg",
-           "Hamburg": "Hamburger SV", "Paris Saint-Germain": "PSG", "RC Lens": "Lens"}
+           "Hamburg": "Hamburger SV", "Paris Saint-Germain": "PSG", "RC Lens": "Lens",
+           # English exonyms of cup clubs -> names used by Polish media
+           "AEK Athens": "AEK Ateny", "FC Copenhagen": "FC Kopenhaga", "Slavia Prague": "Slavia Praga",
+           "Sparta Prague": "Sparta Praga", "Sporting Lisbon": "Sporting Lizbona", "Shakhtar Donetsk": "Szachtar Donieck",
+           "Lech Poznan": "Lech Poznań", "Jagiellonia Bialystok": "Jagiellonia Białystok", "Olympiakos FC": "Olympiakos Pireus",
+           "Omonia Nicosia": "Omonia Nikozja", "FC Viktoria Plzen": "Viktoria Pilzno"}
 PRESTIGE = {"Manchester United": 10, "Liverpool": 10, "Real Madryt": 10, "Barcelona": 10, "Bayern Monachium": 10, "PSG": 10,
             "Arsenal": 9, "Manchester City": 9, "Chelsea": 9, "Juventus": 9, "Inter": 9, "Milan": 9, "Borussia Dortmund": 9,
             "Tottenham": 8, "Atlético Madryt": 8, "Napoli": 8, "Roma": 8, "Marseille": 8,
@@ -196,6 +201,9 @@ def main():
             elo = (ej or {}).get("teams", {})
         except Exception as e:
             report["errors"].append(f"elo: {e}")
+    for c in NATIONS:  # national-team tables come in English ("England") – show the Polish names used everywhere else
+        for r in tables[c]:
+            r["team"] = (elo.get(r["team"]) or {}).get("pl") or r["team"]
 
     def team_obj(name, comp, kickoff):
         t = {"name": name}
@@ -231,8 +239,8 @@ def main():
                 ko = parse(fx["kickoff_utc"])
             except (KeyError, ValueError):
                 continue
-            if ko > horizon or ko < now() - dt.timedelta(hours=3):
-                continue
+            if ko > horizon or ko <= now():
+                continue  # after kickoff a match is frozen: its pre-match data are what the prediction is judged on
             h, aw = disp(fx["home"]), disp(fx["away"])
             existing = next((i for i, m in docs.items() if m.get("league") == c and m["home"]["name"] in (h, (elo.get(h) or {}).get("pl"))
                              and m["away"]["name"] in (aw, (elo.get(aw) or {}).get("pl"))
@@ -283,7 +291,8 @@ def main():
                     break
 
     # 4) APIs + news (odds, injuries, h2h, coaches)
-    up = {i: m for i, m in docs.items() if m.get("status") != "finished" and parse(m["kickoff"]) <= horizon}
+    # only matches that have not started: in-play odds (e.g. 1.03 for a team leading 2:0) must never replace pre-match odds
+    up = {i: m for i, m in docs.items() if m.get("status") != "finished" and now() < parse(m["kickoff"]) <= horizon}
     if tf is not None and not a.no_api:
         fr = {"at": iso(now()), "errors": [], "unmatched": [], "news": {}, "odds_api": {"key": False, "matched": 0},
               "api_football": {"key": False, "injury_docs": 0, "h2h_docs": 0}}

@@ -13,12 +13,12 @@ tf = importlib.util.module_from_spec(spec); spec.loader.exec_module(tf)
 FOTMOB = {"pl": 47, "laliga": 87, "seriea": 55, "bundesliga": 54, "ligue1": 53, "championship": 48,
           "ucl": 42, "uel": 73, "uecl": 10216, "pl1": 197}
 # FotMob team name -> Sky name where the two differ too much for automatic matching
-FIX = {"Sporting CP": "Sporting Lisbon", "Olympiacos": "Olympiakos FC", "Olympiakos": "Olympiakos FC",
+FIX = {"Sporting CP": "Sporting Lizbona", "Olympiacos": "Olympiakos Pireus", "Olympiakos": "Olympiakos Pireus",
        "FC Salzburg": "Red Bull Salzburg", "RB Salzburg": "Red Bull Salzburg", "Red Bull Salzburg": "Red Bull Salzburg",
-       "FC København": "FC Copenhagen", "FC Kobenhavn": "FC Copenhagen", "FC Nordsjælland": "FC Nordsjaelland",
+       "FC København": "FC Kopenhaga", "FC Kobenhavn": "FC Kopenhaga", "FC Nordsjælland": "FC Nordsjaelland",
        "Nordsjælland": "FC Nordsjaelland", "Heart of Midlothian": "Hearts", "Hearts": "Hearts", "LASK": "Linz ASK",
        "Sint-Truiden": "Sint-Truidense VV", "Sint-Truidense": "Sint-Truidense VV", "STVV": "Sint-Truidense VV",
-       "Borac Banja Luka": "Borac", "Jagiellonia Białystok": "Jagiellonia Bialystok", "Jagiellonia": "Jagiellonia Bialystok"}
+       "Borac Banja Luka": "Borac", "Jagiellonia Białystok": "Jagiellonia Białystok", "Jagiellonia": "Jagiellonia Białystok"}
 ISO = {"Singapore": "sg", "Albania": "al", "Andorra": "ad", "Armenia": "am", "Austria": "at", "Azerbaijan": "az", "Belarus": "by", "Belgium": "be",
        "Bosnia and Herzegovina": "ba", "Bulgaria": "bg", "Croatia": "hr", "Cyprus": "cy", "Czechia": "cz", "Denmark": "dk",
        "England": "gb-eng", "Estonia": "ee", "Faroe Islands": "fo", "Finland": "fi", "France": "fr", "Georgia": "ge", "Germany": "de",
