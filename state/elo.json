@@ -1,8 +1,8 @@
 {
- "updatedAt": "2026-11-11T10:33:41Z",
+ "updatedAt": "2026-11-12T13:56:11Z",
  "source": "https://www.eloratings.net/World.tsv",
  "namesSource": "https://www.eloratings.net/en.teams.tsv",
- "sourceLastModified": "2026-11-11T09:43:27Z",
+ "sourceLastModified": "2026-11-12T09:50:56Z",
  "count": 244,
  "teams": {
   "Spain": {
@@ -413,23 +413,23 @@
    "rank": 68,
    "pl": "Angola"
   },
+  "New Zealand": {
+   "code": "NZ",
+   "rating": 1561,
+   "rank": 69,
+   "pl": "Nowa Zelandia"
+  },
   "United Arab Emirates": {
    "code": "AE",
    "rating": 1560,
-   "rank": 69,
+   "rank": 70,
    "pl": "Zjednoczone Emiraty Arabskie"
   },
   "Cape Verde": {
    "code": "CV",
    "rating": 1560,
-   "rank": 69,
+   "rank": 70,
    "pl": "Republika Zielonego Przylądka"
-  },
-  "New Zealand": {
-   "code": "NZ",
-   "rating": 1559,
-   "rank": 71,
-   "pl": "Nowa Zelandia"
   },
   "Romania": {
    "code": "RO",
@@ -595,7 +595,7 @@
   },
   "Vietnam": {
    "code": "VN",
-   "rating": 1399,
+   "rating": 1400,
    "rank": 99,
    "pl": "Wietnam"
   },
@@ -1003,7 +1003,7 @@
   },
   "India": {
    "code": "IN",
-   "rating": 1144,
+   "rating": 1146,
    "rank": 167,
    "pl": "Indie"
   },
@@ -1157,35 +1157,35 @@
    "rank": 192,
    "pl": "Afganistan"
   },
+  "Bangladesh": {
+   "code": "BD",
+   "rating": 946,
+   "rank": 193,
+   "pl": "Bangladesz"
+  },
   "Greenland": {
    "code": "GL",
    "rating": 945,
-   "rank": 193,
+   "rank": 194,
    "pl": "Grenlandia"
   },
   "Djibouti": {
    "code": "DJ",
    "rating": 941,
-   "rank": 194,
+   "rank": 195,
    "pl": "Dżibuti"
   },
   "Sint Maarten": {
    "code": "SX",
    "rating": 932,
-   "rank": 195,
+   "rank": 196,
    "pl": "Sint Maarten"
   },
   "Pakistan": {
    "code": "PK",
    "rating": 928,
-   "rank": 196,
-   "pl": "Pakistan"
-  },
-  "Bangladesh": {
-   "code": "BD",
-   "rating": 923,
    "rank": 197,
-   "pl": "Bangladesz"
+   "pl": "Pakistan"
   },
   "Antigua and Barbuda": {
    "code": "AG",
@@ -1223,28 +1223,28 @@
    "rank": 203,
    "pl": "Kambodża"
   },
-  "Sri Lanka": {
-   "code": "LK",
-   "rating": 876,
-   "rank": 204,
-   "pl": "Sri Lanka"
-  },
   "Bonaire": {
    "code": "BQ",
    "rating": 856,
-   "rank": 205,
+   "rank": 204,
    "pl": "Bonaire"
+  },
+  "Sri Lanka": {
+   "code": "LK",
+   "rating": 853,
+   "rank": 205,
+   "pl": "Sri Lanka"
   },
   "Taiwan": {
    "code": "TW",
-   "rating": 821,
+   "rating": 820,
    "rank": 206,
    "pl": "Tajwan"
   },
   "San Marino": {
    "code": "SM",
    "rating": 820,
-   "rank": 207,
+   "rank": 206,
    "pl": "San Marino"
   },
   "Seychelles": {
@@ -1267,7 +1267,7 @@
   },
   "Maldives": {
    "code": "MV",
-   "rating": 769,
+   "rating": 765,
    "rank": 211,
    "pl": "Malediwy"
   },
