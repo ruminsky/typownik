@@ -89,6 +89,8 @@ button.cmain:active{opacity:.85}
 .stars i{width:9px;height:9px;border-radius:2px;background:var(--nline)}
 .stars i.on{background:var(--gold)}
 .vbadge{flex:none;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800;background:var(--gold);color:var(--goldink)}
+.rbadge{flex:none;border-radius:6px;padding:2px 8px;font-size:12px;font-weight:800;background:color-mix(in srgb,var(--bad) 16%,transparent);color:var(--bad)}
+.risk{font-size:13px;line-height:1.35;font-weight:600;color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent);border-radius:10px;padding:8px 10px;text-align:left}
 /* gold 1X2 buttons */
 .ybtns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .yb{display:flex;flex-direction:column;gap:7px;min-width:0}
@@ -566,12 +568,17 @@ const teamsHtml=(m,size)=>`<div class="mc-teams">
     <div class="mc-time">${esc(shortDay(m.kickoff))}<b class="num">${fmtTime(m.kickoff)}</b></div>
     <div class="mt">${crest(m.away.name,size)}<div><b>${esc(m.away.name)}</b><small>${posTxt(m.away)}</small></div></div></div>`;
 const pickHtml=(p,tp)=>`<div class="mc-pick"><div class="t"><small>Typ ${esc(tp.code)}</small>${esc(tp.text)}</div><div><div class="p num">${pct(tp.p)}</div>${starsHtml(p.stars)}</div></div>`;
+// coin flip: no single result above 55% – a bad leg for an accumulator
+const riskTop=p=>{ const t=Math.max(p.fin.h,p.fin.d,p.fin.a); return t<0.55?t:null; };
+const riskHtml=p=>{ const t=riskTop(p); if(t==null) return "";
+  return `<div class="risk">⚠ Ryzykowny na kupon: najbardziej prawdopodobny wynik ma tylko ${pct(t)}, to prawie rzut monetą. Na AKO bezpieczniej ${esc(p.safe.code)} (${pct(p.safe.p)}) albo pomiń ten mecz.</div>`; };
 function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
   return `<article class="mcard">
   <button class="cmain" data-id="${esc(m.id)}" aria-label="${esc(m.home.name)} – ${esc(m.away.name)}: pełna analiza">
     <div class="mc-top"><span class="l">${BALL}${esc(LMAP[m.league]?.name||"")}</span>${v&&v.e>0.05?`<span class="vbadge">Okazja ${v.lab} +${Math.round(v.e*100)}%</span>`:""}</div>
     ${teamsHtml(m,40)}
     ${pickHtml(p,tp)}
+    ${riskHtml(p)}
     ${ybtns(m,p,tp,false)}
   </button>
   <details class="whybar"><summary>Dlaczego taki typ? <span class="chev"></span></summary>${whyPanel(m,p,false)}</details>
@@ -579,8 +586,8 @@ function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
 function listRow(m,p){ const tp=tipOf(p), v=bestValue(m,p); const team=tp.cls==="a"?m.away:m.home;
   return `<details class="lrow"><summary>
     <div class="lr-top"><span>${esc(m.home.name)} – ${esc(m.away.name)}</span><span class="num">${esc(shortDay(m.kickoff))} · ${fmtTime(m.kickoff)}</span></div>
-    <div class="lr-main"><span class="pk">${crest(team.name,20)}<b>${esc(tp.text)}</b><em>typ ${esc(tp.code)}</em></span>${v&&v.e>0.05?`<span class="vbadge">Okazja</span>`:""}<span class="pp num">${pct(tp.p)}</span><span class="chev"></span></div>
-  </summary><div class="lr-body">${ybtns(m,p,tp,true)}${whyPanel(m,p,false)}</div></details>`; }
+    <div class="lr-main"><span class="pk">${crest(team.name,20)}<b>${esc(tp.text)}</b><em>typ ${esc(tp.code)}</em></span>${v&&v.e>0.05?`<span class="vbadge">Okazja</span>`:""}${riskTop(p)!=null?`<span class="rbadge">Ryzyko</span>`:""}<span class="pp num">${pct(tp.p)}</span><span class="chev"></span></div>
+  </summary><div class="lr-body">${riskHtml(p)}${ybtns(m,p,tp,true)}${whyPanel(m,p,false)}</div></details>`; }
 
 /* ================= VIEWS ================= */
 function stateBox(){
@@ -694,6 +701,7 @@ function renderDetail(id){
     <div class="mc-top"><span class="l">${BALL}${esc(LMAP[m.league]?.name||"")}</span><span>${esc(dayLabel(dkey(m.kickoff),true))}</span></div>
     ${teamsHtml(m,52)}
     ${pickHtml(p,tp)}
+    ${riskHtml(p)}
     ${ybtns(m,p,tp,false)}
     <div class="dq">${p.dq.map(([l,ok])=>`<span class="${ok?"ok":"no"}">${ok?"✓":"–"} ${esc(l)}</span>`).join("")}</div>
     ${missingNote(p)?`<div class="hnote">${esc(missingNote(p))}${p.dqScore<=3?" Siła typu jest obniżona.":""}</div>`:""}
