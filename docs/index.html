@@ -258,7 +258,7 @@ const LS={pl:1,laliga:0.97,seriea:0.95,bundesliga:0.94,ligue1:0.9,championship:0
 const store={get(k,d){try{const v=localStorage.getItem("typ2:"+k);return v==null?d:JSON.parse(v)}catch(e){return d}},set(k,v){try{localStorage.setItem("typ2:"+k,JSON.stringify(v))}catch(e){}}};
 let sel=new Set(store.get("leagues3",LEAGUES.map(l=>l.id)));
 let players=null, tables={}, metaDoc=null;
-const DEF={market:0.4,shrinkK:5,rho:-0.06,tax:true};
+const DEF={market:0.5,shrinkK:5,rho:-0.06,tax:true};
 let settings=Object.assign({},DEF,store.get("settings",{}));
 let matches=[], rawMatches=[], teamsDB={}, dbState="loading", dayPick=null;
 /* team knowledge base (collection "teams", id = slug of the display name) merged into every match */
@@ -370,7 +370,7 @@ function predict(m){
   const uo=typeof getOdds==="function"?getOdds(m.id):null;
   const od=(m.odds&&m.odds.h&&m.odds.d&&m.odds.a)?m.odds:(uo&&+uo.h>1&&+uo.d>1&&+uo.a>1?{h:+uo.h,d:+uo.d,a:+uo.a,user:true}:null);
   if(od){ const ih=1/od.h,id=1/od.d,ia=1/od.a,s=ih+id+ia; market={h:ih/s,d:id/s,a:ia/s,margin:s-1,user:!!od.user};
-    const w=(LG.cup||LG.nation)?Math.max(settings.market,0.6):settings.market; fin={h:(1-w)*ph+w*market.h,d:(1-w)*pd+w*market.d,a:(1-w)*pa+w*market.a}; }
+    const w=(LG.cup||LG.nation)?Math.max(settings.market,0.7):settings.market; fin={h:(1-w)*ph+w*market.h,d:(1-w)*pd+w*market.d,a:(1-w)*pa+w*market.a}; }
   const dq=[
     useElo?["Ranking Elo",true]:["Tabela sezonu",!!(m.home.overall?.p&&m.away.overall?.p)],
     ["Dom / wyjazd",!!(m.home.venue?.p&&m.away.venue?.p)],
@@ -436,8 +436,8 @@ function crest(name,size){
 const getOdds=id=>store.get("odds:"+id,null), setOdds=(id,o)=>store.set("odds:"+id,o);
 const taxF=()=>settings.tax?0.88:1; // Polish 12% stake tax: a 10 zł stake plays as 8.80 zł
 const evOf=(p,o)=>o? p*o*taxF()-1 : null;
-function bestValue(m,p){ const o=getOdds(m.id); if(!o) return null; let b=null;
-  for(const [k,lab] of [["h","1"],["d","X"],["a","2"]]){ const e=evOf(p.model[k],+o[k]); if(e!=null&&!isNaN(e)&&(!b||e>b.e)) b={k,lab,e}; } return b; }
+function bestValue(m,p){ const o=getOdds(m.id)||m.odds?.betclic; if(!o) return null; let b=null; // own odds, else Betclic from the data
+  for(const [k,lab] of [["h","1"],["d","X"],["a","2"]]){ const e=evOf(p.fin[k],+o[k]); if(e!=null&&!isNaN(e)&&(!b||e>b.e)) b={k,lab,e}; } return b; }
 
 /* ================= helpers ================= */
 const dkey=iso=>{const d=new Date(iso);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")};
@@ -735,7 +735,7 @@ function renderDetail(id){
       <label for="o-a">2<input id="o-a" inputmode="decimal" placeholder="${m.odds?.betclic?dec(+m.odds.betclic.a,2):"—"}" value="${esc(o.a)}"></label>
     </div>
     <div id="evout" class="odds"></div>
-    <div class="note">Wpisz kursy z Betclic. „Opłaca się od” to najniższy kurs, przy którym zakład ma wartość według samego modelu${settings.tax?", z uwzględnieniem 12% podatku od stawki (zmienisz to w Ustawieniach)":""}. Wyższy kurs daje zielony plus. Wpisane kursy wchodzą też do typu jako głos rynku (waga w Ustawieniach), co poprawia trafność na początku sezonu. Zapisują się tylko na tym telefonie.</div>
+    <div class="note">Wpisz kursy z Betclic. „Opłaca się od” to najniższy kurs, przy którym zakład ma wartość według typu aplikacji${settings.tax?", z uwzględnieniem 12% podatku od stawki (zmienisz to w Ustawieniach)":""}. Wyższy kurs daje zielony plus. Wpisane kursy wchodzą też do typu jako głos rynku (waga w Ustawieniach), co poprawia trafność na początku sezonu. Zapisują się tylko na tym telefonie.</div>
   </div></details>
 
   <details class="sec"><summary>Drużyny <span class="chev"></span></summary><div class="in"><div class="two">${teamBlock(m.home,"U siebie")}${teamBlock(m.away,"Na wyjeździe")}</div></div></details>
@@ -755,7 +755,7 @@ function renderDetail(id){
   </div></details>`;
   $("#back").onclick=()=>{ location.hash="" };
   const upd=()=>{ const v={h:$("#o-h").value.replace(",","."),d:$("#o-d").value.replace(",","."),a:$("#o-a").value.replace(",",".")}; setOdds(m.id,v);
-    $("#evout").innerHTML=[["h","1"],["d","X"],["a","2"]].map(([k,l])=>{ const fair=dec(1/(p.model[k]*taxF()),2); const e=evOf(p.model[k],+v[k]);
+    $("#evout").innerHTML=[["h","1"],["d","X"],["a","2"]].map(([k,l])=>{ const fair=dec(1/(p.fin[k]*taxF()),2); const e=evOf(p.fin[k],+v[k]);
       if(!v[k]||isNaN(e)) return `<div class="ev note">opłaca się od<br><b class="num" style="color:var(--ink)">${fair}</b></div>`;
       return `<div class="ev num" style="color:${e>0.05?"var(--good)":e<0?"var(--bad)":"var(--muted)"}">${e>=0?"+":""}${Math.round(e*100)}%<br><span class="note">opłaca się od ${fair}</span></div>`; }).join(""); };
   ["#o-h","#o-d","#o-a"].forEach(s=>{ $(s).addEventListener("input",upd); $(s).addEventListener("change",()=>{ const y=window.scrollY; renderDetail(m.id); const d=document.querySelectorAll("details.sec")[2]; if(d) d.open=true; window.scrollTo(0,y); }); }); upd();
@@ -960,8 +960,8 @@ function renderSettings(){
     <div class="codebox">read -s "?Klucz API-Football: " K && printf %s "$K" > ~/.typownik/api-football.key && chmod 600 ~/.typownik/api-football.key && unset K</div>`:""}
   </section>
   <section class="panel"><h3>Model i kursy</h3>
-    <div class="slider"><label for="s-mk">Waga kursów rynkowych: <b id="s-mk-v">${Math.round(settings.market*100)}%</b></label><input type="range" id="s-mk" min="0" max="60" step="5" value="${settings.market*100}">
-    <div class="note">Kursy rynkowe zawierają wiedzę tysięcy graczy. Domieszka 20–30% zwykle poprawia trafność. Ustaw 0%, jeśli szukasz okazji, czyli rozbieżności z bukmacherem.</div></div>
+    <div class="slider"><label for="s-mk">Waga kursów rynkowych: <b id="s-mk-v">${Math.round(settings.market*100)}%</b></label><input type="range" id="s-mk" min="0" max="80" step="5" value="${settings.market*100}">
+    <div class="note">Kursy rynkowe zawierają wiedzę tysięcy graczy i są dokładniejsze niż sam model, zwłaszcza przy wyraźnych faworytach. Domyślnie 50% (w pucharach i meczach reprezentacji co najmniej 70%). Mniej = więcej „okazji”, ale też więcej pomyłek modelu.</div></div>
     <div class="slider"><label for="s-sh">Ostrożność przy małej próbce: <b id="s-sh-v">${settings.shrinkK}</b></label><input type="range" id="s-sh" min="0" max="12" step="1" value="${settings.shrinkK}">
     <div class="note">Na początku sezonu statystyki drużyn są mocniej ściągane do średniej ligowej.</div></div>
     <label class="tg" for="s-tax"><span>Podatek od gier 12%<span class="note" style="display:block;font-weight:400">Od stawki odliczane jest 12% (10 zł gra jak 8,80 zł). Wyłącz, jeśli Twój kupon jest bez podatku, np. w promocji bukmachera.</span></span><input type="checkbox" class="sw" id="s-tax" ${settings.tax?"checked":""}></label>

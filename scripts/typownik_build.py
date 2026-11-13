@@ -131,6 +131,8 @@ def safe(fn, comp, report, what):
     if mod is sky and comp not in getattr(sky, "COMPS", {}):
         return []  # no Sky page for this competition (e.g. World Cup / Euro outside tournament years)
     try:
+        if mod is sky and fn == "results":  # home/away records need the whole season, Sky shows one month per page
+            return sky.results(comp, months_back=(now().month - 8) % 12) or []
         return getattr(mod, fn)(comp) or []
     except Exception as e:  # network/parse problems must not stop the whole build
         report["errors"].append(f"{what} {comp}: {e}")
@@ -144,6 +146,17 @@ def form_of(team, results):
         gf, ga = (r["hg"], r["ag"]) if r["home"] == team else (r["ag"], r["hg"])
         out += "W" if gf > ga else "L" if gf < ga else "D"
     return out or None
+
+
+def venue_of(team, results, side):
+    """Home record of the home team / away record of the away team this season."""
+    rs = [r for r in results if r[side] == team]
+    if not rs:
+        return None
+    f, a = ("hg", "ag") if side == "home" else ("ag", "hg")
+    w = sum(r[f] > r[a] for r in rs)
+    d = sum(r[f] == r[a] for r in rs)
+    return {"p": len(rs), "w": w, "d": d, "l": len(rs) - w - d, "gf": sum(r[f] for r in rs), "ga": sum(r[a] for r in rs)}
 
 
 def last_played(team, all_results):
@@ -205,7 +218,7 @@ def main():
         for r in tables[c]:
             r["team"] = (elo.get(r["team"]) or {}).get("pl") or r["team"]
 
-    def team_obj(name, comp, kickoff):
+    def team_obj(name, comp, kickoff, side):
         t = {"name": name}
         if comp in NATIONS:
             e = elo.get(name) or next((v for k, v in elo.items() if v.get("pl") == name), None)
@@ -222,6 +235,9 @@ def main():
             f = form_of(name, results.get(dom, []))
             if f:
                 t["form"] = f
+            v = venue_of(name, results.get(dom, []), side)
+            if v:
+                t["venue"] = v
             if comp in CUPS:
                 t["dom"] = dom
                 if dom in lavg:
@@ -247,11 +263,11 @@ def main():
                              and abs((parse(m["kickoff"]) - ko).total_seconds()) <= 4 * 86400), None)
             doc_id = existing or f"{c}-{ko.strftime('%Y-%m-%d')}-{tf.slug(fx['home'])}-{tf.slug(fx['away'])}"
             m = docs.get(doc_id, {"id": doc_id, "league": c, "status": "scheduled", "sources": []})
-            hn, an = team_obj(h, c, ko), team_obj(aw, c, ko)
+            hn, an = team_obj(h, c, ko, "home"), team_obj(aw, c, ko, "away")
             for side, new in (("home", hn), ("away", an)):
                 old = m.get(side, {})
                 keep = {k: v for k, v in old.items() if k in ("absences", "keyPlayers", "news", "morale", "transfers", "transfersNote",
-                                                           "motivation", "motivationNote", "venue", "coach", "europeMidweek")}
+                                                           "motivation", "motivationNote", "coach", "europeMidweek")}
                 m[side] = {**new, **keep}
             m["kickoff"] = iso(ko)
             if fx.get("tbc"):
@@ -301,10 +317,15 @@ def main():
         fr["odds_api"]["key"], fr["api_football"]["key"] = bool(ok), bool(fk)
         try:
             if ok:
-                tf.fetch_odds({i: m for i, m in up.items() if m["league"] in tf.ODDS_SPORT
-                               and parse(m["kickoff"]) <= now() + dt.timedelta(days=4)}, ok, fr, patches)  # saves credits
+                win = {i: m for i, m in up.items() if m["league"] in tf.ODDS_SPORT and parse(m["kickoff"]) <= now() + dt.timedelta(days=3)}
+                last = {}
+                for m in win.values():
+                    at = (m.get("odds") or {}).get("at")
+                    last[m["league"]] = max(last.get(m["league"]) or "", at or "")
+                stale = {lg for lg, at in last.items() if not at or now() - parse(at) >= dt.timedelta(hours=12)}
+                tf.fetch_odds({i: m for i, m in win.items() if m["league"] in stale}, ok, fr, patches)  # 1 credit per league
             if fk:
-                tf.fetch_af({i: m for i, m in up.items() if m["league"] in tf.AF_LEAGUE}, fk, 90, fr, patches, team_patches)
+                tf.fetch_af({i: m for i, m in up.items() if m["league"] in tf.AF_LEAGUE}, fk, 45, fr, patches, team_patches)  # 100/day for 2+ runs
             os.makedirs(RUN, exist_ok=True)
             tf.collect_news(up, teams_kb, fr, RUN)
         except Exception as e:

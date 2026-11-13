@@ -37,7 +37,7 @@ ODDS_SPORT = {"pl": "soccer_epl", "laliga": "soccer_spain_la_liga", "seriea": "s
               "championship": "soccer_efl_champ", "ucl": "soccer_uefa_champs_league", "uel": "soccer_uefa_europa_league",
               "uecl": "soccer_uefa_europa_conference_league", "nl": "soccer_uefa_nations_league",
               "wc": "soccer_fifa_world_cup", "euro": "soccer_uefa_european_championship",
-              "friendly": "soccer_international_friendlies", "ekstraklasa": "soccer_poland_ekstraklasa"}
+              "ekstraklasa": "soccer_poland_ekstraklasa"}
 AF_LEAGUE = {"pl": 39, "laliga": 140, "seriea": 135, "bundesliga": 78, "ligue1": 61, "championship": 40,
              "ucl": 2, "uel": 3, "uecl": 848, "nl": 5, "wc": 1, "euro": 4, "friendly": 10, "ekstraklasa": 106, "pl1": 107}
 AF_LEAGUE_REV = {v: k for k, v in AF_LEAGUE.items()}
@@ -398,7 +398,9 @@ def nation_pl(name):
                     if v.get("pl"):
                         _EN2PL[en] = v["pl"]
             _EN2PL.update({"Czech Republic": "Czechy", "Republic of Ireland": "Irlandia", "Korea Republic": "Korea Południowa",
-                           "USA": "USA", "Turkiye": "Turcja", "Bosnia & Herzegovina": "Bośnia i Hercegowina"})
+                           "USA": "USA", "Turkiye": "Turcja", "Bosnia & Herzegovina": "Bośnia i Hercegowina",
+                           "FYR Macedonia": "Macedonia Północna", "Rep. Of Ireland": "Irlandia", "Czechia": "Czechy",
+                           "Korea DPR": "Korea Północna", "Cote D'Ivoire": "Wybrzeże Kości Słoniowej", "Cape Verde Islands": "Republika Zielonego Przylądka"})
         except (OSError, ValueError):
             pass
     return _EN2PL.get(name, name)
@@ -685,18 +687,18 @@ def fetch_af(docs, key, budget, report, patches, team_patches=None, h2h_cap=25):
     if not fx:
         rep["requests_used"] = af.used
         return
-    # 2) injuries for matched fixtures (20 ids per request)
-    ids = [v[0] for v in fx.values() if v[0]]
-    by_fixture = {}
-    for i in range(0, len(ids), 20):
-        r, err = af.get("/injuries", {"ids": "-".join(str(x) for x in ids[i:i + 20])})
+    # 2) injuries for matched fixtures: one request per match day (free plans refuse the "ids" parameter)
+    ids = {v[0] for v in fx.values() if v[0]}
+    by_fixture = {fid: [] for fid in ids}
+    for day in sorted({parse_iso(docs[d]["kickoff"]).strftime("%Y-%m-%d") for d, v in fx.items() if v[0]}):
+        r, err = af.get("/injuries", {"date": day, "timezone": "UTC"})
         if err:
-            report["errors"].append("API-Football injuries: " + err)
+            report["errors"].append(f"API-Football injuries {day}: " + err)
             continue
         for it in r or []:
-            by_fixture.setdefault((it.get("fixture") or {}).get("id"), []).append(it)
-        for fid in ids[i:i + 20]:
-            by_fixture.setdefault(fid, [])
+            fid = (it.get("fixture") or {}).get("id")
+            if fid in ids:
+                by_fixture[fid].append(it)
     # 3) squads (positions) for teams with injuries, cached for 7 days
     pos = {}
     teams_inj = sorted({it["team"]["id"] for its in by_fixture.values() for it in its if it.get("team")})
