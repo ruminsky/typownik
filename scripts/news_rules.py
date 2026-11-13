@@ -29,13 +29,13 @@ RUMOUR = re.compile(r"(gossip|plotk\w*|podobno|spekul\w*|rumou?r\w*|według (med
                     r"interesuje się|chce (kupić|sprowadzić)|negocjuj\w*|linked|target|reportedly|set to|"
                     r"expected to|could (leave|join|be)|in talks|interest in|monitor\w*|eye\w* move|eyeing|paper talk|would consider|"
                     r"considering|keen on|plot\w* (move|bid)|wants? to sign|wants? |transfer (news|rumou?rs?)|close tabs|"
-                    r"latest transfer|jeśli|jeżeli|\?$)", re.I)
+                    r"latest transfer|jeśli|jeżeli|blisk\w*|\?$)", re.I)
 PRIVATE = re.compile(r"(żon\w*|mąż|męża|rozw\w*|dziewczyn\w*|partnerk\w*|ślub\w*|dzieck\w*|syn\w*|córk\w*|matk\w*|ojc\w*|"
                      r"pogrzeb|zmarł\w*|śmier\w*|wife|girlfriend|divorce|wedding|funeral|died|son |daughter)", re.I)
 COACH = r"(trener\w*|szkoleniow\w*|menedżer\w*|manager|head coach|coach|boss)"
 RULES = [
     ("zwolniony", re.compile(r"(zwolni\w*|dymisj\w*|sacked|fired|parted company|rozsta\w* z trener\w*)", re.I)),
-    ("pod presją", re.compile(r"(sack|under pressure|pod presją|traci posad\w*|może stracić|na wylocie|ostatnia szansa|"
+    ("pod presją", re.compile(r"(sack|under pressure|pod presją|traci posad\w*|może stracić (posad|prac|stanowisk)\w*|na wylocie|ostatnia szansa|"
                               r"zagrożon\w*|future in doubt|dni \w+ policzone|zwolnienie\?)", re.I)),
     ("nowy", re.compile(r"(nowym trener\w*|nowy trener|nowego trener\w*|new (head )?coach|new manager|appointed|zatrudni\w*|"
                         r"objął|obejmie|zastąpił\w*)", re.I)),
@@ -284,6 +284,14 @@ def named(title, teams):
 
 
 
+def status_of(title, rumour):
+    """Coach status a headline states: a rumoured sacking is only pressure, a rumoured new coach changes nothing yet."""
+    st = next((name for name, rx in RULES if rx.search(title)), None)
+    if st == "zwolniony" and rumour:
+        return "pod presją"
+    return None if st == "nowy" and rumour else st
+
+
 def now():
     return dt.datetime.now(dt.timezone.utc)
 
@@ -315,14 +323,7 @@ def main():
         rumour = bool(RUMOUR.search(title) or RUMOUR.search(summ[:120]))
         coach_name = ((kb.get("coach") or {}).get("name") or "")
         coach_hit = re.search(COACH, title, re.I) or (coach_name and tf.norm(coach_name.split()[-1]) in tnorm)
-        status = None
-        if coach_hit:
-            for st, rx in RULES:
-                if rx.search(title):
-                    status = st
-                    break
-            if status == "zwolniony" and rumour:
-                status = "pod presją"  # a rumoured sacking is pressure, not a fact
+        status = status_of(title, rumour) if coach_hit else None
         if status:
             co = kb.get("coach") or {}
             manual = co.get("status") not in (None, "ok") and not co.get("auto") and co.get("updatedAt", "") > cut
@@ -359,7 +360,8 @@ def main():
     for kb in teams.values():
         co = kb.get("coach") or {}
         note = co.get("note") or ""
-        if co.get("auto") and note and (note in mt or junk(note) or subject_of(note, teams) != kb.get("name")):
+        if co.get("auto") and note and (note in mt or junk(note) or subject_of(note, teams) != kb.get("name")
+                                         or status_of(note, bool(RUMOUR.search(note))) != co.get("status")):  # rules changed
             kb["coach"] = {**{k: v for k, v in co.items() if k not in ("note", "until", "auto", "source")}, "status": "ok"}
             dropped += 1  # the automatic coach status came from a headline that no longer passes the rules
         kept_texts = []

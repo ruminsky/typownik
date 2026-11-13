@@ -214,6 +214,8 @@ nav.tabs button[aria-selected="true"]{background:var(--sel);color:var(--selink)}
 .codebox{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface2);border-radius:10px;padding:10px;overflow-x:auto;white-space:pre;user-select:all}
 @media (max-width:380px){.mt b{font-size:16px}.yb .val{font-size:22px}.two{grid-template-columns:1fr}.mc-pick .p{font-size:26px}nav.tabs button{font-size:10px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.legend{margin-top:10px;text-align:left}.legend summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0;min-height:44px;display:flex;align-items:center}
+.legend dl{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin:4px 0 0}.legend dt{font-weight:800;color:var(--ink);white-space:nowrap}.legend dd{margin:0;min-width:0}
 </style>
 
 <div class="wrap">
@@ -222,7 +224,25 @@ nav.tabs button[aria-selected="true"]{background:var(--sel);color:var(--selink)}
     <div><h1>Typownik</h1><div class="sub" id="status">Łączę z bazą meczów…</div></div>
   </div>
   <main id="view" class="view"></main>
-  <footer>Prognozy to prawdopodobieństwa, nie pewniaki. Nawet bardzo dobry model myli się w 4–5 meczach na 10, a bukmacher ma marżę. Graj tylko za kwoty, których stratę akceptujesz. Herby klubów: TheSportsDB. Pomoc: Anonimowi Hazardziści, tel. 801 889 880.</footer>
+  <footer>Prognozy to prawdopodobieństwa, nie pewniaki. Nawet bardzo dobry model myli się w 4–5 meczach na 10, a bukmacher ma marżę. Graj tylko za kwoty, których stratę akceptujesz. Herby klubów: TheSportsDB. Pomoc: Anonimowi Hazardziści, tel. 801 889 880.
+  <details class="legend"><summary>Legenda skrótów</summary><dl>
+    <dt>1 / X / 2</dt><dd>wygra gospodarz / remis / wygra gość</dd>
+    <dt>1X · X2 · 12</dt><dd>podwójna szansa: gospodarz nie przegra · gość nie przegra · nie będzie remisu</dd>
+    <dt>AKO · SOLO</dt><dd>kupon z kilkoma zdarzeniami (wygrywa tylko, gdy trafisz wszystkie) · kupon z jednym zdarzeniem</dd>
+    <dt>W · R · P</dt><dd>wygrana · remis · porażka w ostatnich meczach (forma)</dd>
+    <dt>Ranking siły</dt><dd>punkty reprezentacji z rankingu eloratings.net (system Elo). Po każdym meczu drużyna zyskuje albo traci punkty, zależnie od wyniku i siły rywala. 100 pkt przewagi to ok. 64% szans na lepszy wynik.</dd>
+    <dt>H2H</dt><dd>mecze bezpośrednie tych dwóch drużyn</dd>
+    <dt>xG</dt><dd>gole oczekiwane: ile goli drużyna „powinna” strzelić z sytuacji, które stworzyła</dd>
+    <dt>Over / under 2,5</dt><dd>w meczu padną co najmniej 3 gole / najwyżej 2 gole</dd>
+    <dt>Obie strzelą</dt><dd>każda drużyna zdobędzie co najmniej jednego gola</dd>
+    <dt>★ gwiazdki</dt><dd>siła typu od 1 do 5; bez kursów bukmacherów najwyżej 3</dd>
+    <dt>Ryzyko</dt><dd>żaden wynik nie ma ponad 55% szans, czyli prawie rzut monetą</dd>
+    <dt>Okazja</dt><dd>kurs jest wyższy niż „opłaca się od”, więc zakład ma wartość</dd>
+    <dt>Opłaca się od</dt><dd>najniższy kurs, przy którym zakład się opłaca, z 12% podatkiem od stawki</dd>
+    <dt>Rynek · marża</dt><dd>średnie kursy wielu bukmacherów · zarobek bukmachera wliczony w kursy</dd>
+    <dt>Kurs live</dt><dd>kurs w trakcie meczu, uwzględnia aktualny wynik</dd>
+    <dt>Brier score</dt><dd>miara trafności prognoz: 0 = idealnie, 0,667 = zgadywanie</dd>
+  </dl></details></footer>
 </div>
 
 <nav class="tabs" aria-label="Nawigacja"><div class="in" role="tablist">
@@ -288,6 +308,7 @@ const BALL=`<svg class="ball" viewBox="0 0 24 24" fill="none" stroke="currentCol
 /* ================= MODEL ================= */
 function shrink(x,n){ const w=n/(n+settings.shrinkK); return x*w+(1-w); }
 function pois(k,l){ let r=Math.exp(-l); for(let i=1;i<=k;i++) r*=l/i; return r; }
+const plForm=s=>String(s||"").replace(/D/g,"R").replace(/L/g,"P"); // W wygrana, R remis, P porażka
 function formInfo(s){ if(!s) return null; let p=0,n=0; for(const c of s){ if(c==="W")p+=3; else if(c==="D")p+=1; if("WDL".includes(c))n++; } return n?{ppg:p/n,n}:null; }
 function strength(t,L,side,cup){ // attack/defence multipliers vs league average
   let LL=L, ls=1;
@@ -341,7 +362,7 @@ function predict(m){
   let lh,la,factors;
   if(useElo){ const adv=m.neutral?0:100, dr=m.home.elo-m.away.elo+adv, We=1/(1+Math.pow(10,-dr/400));
     [lh,la]=eloLambdas(We,L.home+L.away);
-    factors=[{k:"base",label:"Siła wg rankingu Elo"+(adv?" + atut gospodarza":" (teren neutralny)"),note:`Elo ${m.home.elo} vs ${m.away.elo}`,dh:lh/L.home,da:la/L.away}];
+    factors=[{k:"base",label:"Ranking siły"+(adv?" + atut gospodarza":" (teren neutralny)"),note:`${m.home.elo} vs ${m.away.elo} pkt`,dh:lh/L.home,da:la/L.away}];
   } else {
     const sh=strength(m.home,L,"h",LG.cup), sa=strength(m.away,L,"a",LG.cup);
     lh=L.home*sh.att*sa.def; la=L.away*sa.att*sh.def;
@@ -350,7 +371,7 @@ function predict(m){
   }
   const fh=formInfo(m.home.form), fa=formInfo(m.away.form);
   if(fh&&fa){ const wt=Math.min(fh.n,fa.n)/5, f=(fh.ppg-fa.ppg)/3; const mh=1+0.08*f*wt, ma=1-0.08*f*wt; lh*=mh; la*=ma;
-    factors.push({k:"form",label:"Forma (ostatnie mecze)",note:`${m.home.form} vs ${m.away.form}`,dh:mh,da:ma}); }
+    factors.push({k:"form",label:"Forma (ostatnie mecze)",note:`${plForm(m.home.form)} vs ${plForm(m.away.form)}`,dh:mh,da:ma}); }
   for(const f of [...teamAdj(m.home,"h"),...teamAdj(m.away,"a")]){ const mh=f.side==="h"?f.own:f.opp, ma=f.side==="h"?f.opp:f.own; lh*=mh; la*=ma; factors.push({k:f.k,label:f.label,note:f.note,dh:mh,da:ma}); }
   const hs=h2hStats(m);
   if(hs.n){ const s=(hs.w-hs.l)/hs.n, wt=Math.min(hs.n,8)/8; let mh=1+0.06*s*wt, ma=1-0.06*s*wt; let note=`${hs.w}W ${hs.d}R ${hs.l}P w ${hs.n} meczach`;
@@ -372,7 +393,7 @@ function predict(m){
   if(od){ const ih=1/od.h,id=1/od.d,ia=1/od.a,s=ih+id+ia; market={h:ih/s,d:id/s,a:ia/s,margin:s-1,user:!!od.user};
     const w=(LG.cup||LG.nation)?Math.max(settings.market,0.7):settings.market; fin={h:(1-w)*ph+w*market.h,d:(1-w)*pd+w*market.d,a:(1-w)*pa+w*market.a}; }
   const dq=[
-    useElo?["Ranking Elo",true]:["Tabela sezonu",!!(m.home.overall?.p&&m.away.overall?.p)],
+    useElo?["Ranking siły",true]:["Tabela sezonu",!!(m.home.overall?.p&&m.away.overall?.p)],
     ["Dom / wyjazd",!!(m.home.venue?.p&&m.away.venue?.p)],
     ["Forma",!!(fh&&fa)],
     ["xG",!!(m.home.overall?.fxg!=null||m.home.venue?.fxg!=null)],
@@ -475,12 +496,12 @@ function teamPoints(m,p,side){
       else if(ogd-gd>=0.3) add(cons,1.8,`Gorsza różnica bramek: ${sgn(gd)} na mecz (rywal ${sgn(ogd)})`); }
   }
   if(t.elo&&opp.elo&&!(o&&o.p)){ const d=t.elo-opp.elo;
-    if(d>=60) add(pros,2.6,`Wyżej w rankingu Elo: ${t.elo} wobec ${opp.elo} (różnica ${d} pkt)`);
-    else if(d<=-60) add(cons,2.6,`Niżej w rankingu Elo: ${t.elo} wobec ${opp.elo} (różnica ${-d} pkt)`); }
+    if(d>=60) add(pros,2.6,`Wyżej w rankingu siły: ${t.elo} pkt wobec ${opp.elo} (różnica ${d} pkt)`);
+    else if(d<=-60) add(cons,2.6,`Niżej w rankingu siły: ${t.elo} pkt wobec ${opp.elo} (różnica ${-d} pkt)`); }
   if(t.dom&&LMAP[m.league]?.cup&&LS[t.dom]!=null&&opp.dom&&LS[opp.dom]!=null&&LS[t.dom]!==LS[opp.dom])
     add(LS[t.dom]>LS[opp.dom]?pros:cons,1.6,`Liga krajowa: ${LMAP[t.dom]?.name||t.dom} (${LS[t.dom]>LS[opp.dom]?"silniejsza":"słabsza"} niż ${LMAP[opp.dom]?.name||opp.dom})`);
   if(m.neutral){ /* neutral venue: no home advantage */ }
-  else if(LMAP[m.league]?.nation){ if(side==="h") add(pros,1.5,"Gra u siebie: atut gospodarza to w meczach reprezentacji ok. 100 pkt Elo"); }
+  else if(LMAP[m.league]?.nation){ if(side==="h") add(pros,1.5,"Gra u siebie: w meczach reprezentacji atut gospodarza jest wart ok. 100 pkt rankingu siły"); }
   else if(side==="h") add(pros,1.5,`Gra u siebie: w tej lidze gospodarze strzelają średnio ${dec(L.home,2)} gola, goście ${dec(L.away,2)}`);
   else add(cons,1,`Gra na wyjeździe, gdzie drużyny strzelają średnio mniej (${dec(L.away,2)} zamiast ${dec(L.home,2)} gola)`);
   const f=t.form||"", n=f.length, W=(f.match(/W/g)||[]).length, D=(f.match(/D/g)||[]).length, Lc=(f.match(/L/g)||[]).length;
@@ -492,13 +513,14 @@ function teamPoints(m,p,side){
   }
   for(const x of t.absences||[]) add(cons,1+(x.weight||1),`Brak: ${x.player}${x.reason?" ("+x.reason+")":""}`);
   for(const x of t.keyPlayers||[]) add(pros,1+(x.boost||1),`W formie: ${x.player}${x.note?" – "+x.note:""}`);
-  for(const x of t.news||[]){ if(x.impact>0) add(pros,1.5,x.text); else if(x.impact<0) add(cons,1.5,x.text); }
-  for(const x of t.rumours||[]){ if(x.impact>0) add(pros,0.8,"Plotka: "+x.text); else if(x.impact<0) add(cons,0.8,"Plotka: "+x.text); }
+  const nw=[...(t.news||[]),...(t.rumours||[])], good=nw.filter(x=>x.impact>0).length, bad=nw.filter(x=>x.impact<0).length;
+  if(good) add(pros,1.2+0.3*Math.min(good,3),`Dobre wieści z drużyny: ${good} (szczegóły w „Newsy i plotki”)`);
+  if(bad) add(cons,1.2+0.3*Math.min(bad,3),`Złe wieści z drużyny: ${bad} (szczegóły w „Newsy i plotki”)`);
   if(t.transfers>0) add(pros,1.2,`Transfery: ${t.transfersNote||"wzmocnienia w oknie transferowym"}`);
   else if(t.transfers<0) add(cons,1.2,`Transfery: ${t.transfersNote||"osłabienia w oknie transferowym"}`);
   if((t.restDays!=null&&t.restDays<4)||t.europeMidweek) add(cons,2,`Zmęczenie: ${t.europeMidweek?"mecz w pucharach w tym tygodniu":t.restDays+" dni od ostatniego meczu"}`);
   const ce=coachEffect(t.coach);
-  if(ce) add(ce[0]>1?pros:cons,2.2,`Trener${t.coach.name?" "+t.coach.name:""}: ${t.coach.note||ce[2]}`);
+  if(ce) add(ce[0]>1?pros:cons,2.2,`Trener${t.coach.name?" "+t.coach.name:""}: ${ce[2]}`);
   if(t.motivation>0) add(pros,1.2,`Motywacja: ${t.motivationNote||"gra o wysoką stawkę"}`);
   else if(t.motivation<0) add(cons,1.2,`Motywacja: ${t.motivationNote||"niewiele do ugrania"}`);
   const hs=p.hs;
@@ -917,15 +939,17 @@ async function initAuth(){
     if(ev==="SIGNED_IN"&&store.get("loginPending",false)){ store.set("loginPending",false); location.hash="skutecznosc"; } });
   user=(await sb.auth.getSession()).data.session?.user||null; await syncCoupons();
 }
-async function syncCoupons(){ // signed in: coupons from the account (local ones are uploaded once); signed out: this phone only
+let syncing=null;
+function syncCoupons(){ return syncing||=(async()=>{ try{ // one sync at a time: two parallel ones uploaded the same coupons twice
   if(user){
     const local=store.get("coupons",[]);
-    if(local.length&&!(await sb.from("coupons").insert(local.map(c=>({data:c})))).error) store.set("coupons",[]);
+    if(local.length){ store.set("coupons",[]); // taken off the phone first, put back only if the upload fails
+      if((await sb.from("coupons").insert(local.map(c=>({data:c})))).error) store.set("coupons",[...local,...store.get("coupons",[])]); }
     const {data,error}=await sb.from("coupons").select("id,data").order("created_at",{ascending:false});
     coupons=error?store.get("coupons",[]):[...store.get("coupons",[]),...data.map(r=>({...r.data,_id:r.id}))];
   } else coupons=store.get("coupons",[]);
   if(location.hash==="#skutecznosc") renderStats();
-}
+  } finally { syncing=null; } })(); }
 async function saveCoupon(c){
   if(user){ const r=await sb.from("coupons").insert({data:c}).select("id").single(); if(!r.error){ coupons.unshift({...c,_id:r.data.id}); return; } }
   coupons.unshift(c); store.set("coupons",coupons.filter(x=>!x._id)); // offline or signed out: kept on the phone, uploaded after sign-in
@@ -936,7 +960,8 @@ async function deleteCoupon(i){ const c=coupons[i];
 function accountHtml(){
   if(!sb) return "";
   return user?`<div class="note">Zalogowano jako <b>${esc(user.email||"")}</b>. Kupony są zapisane na Twoim koncie. <button class="btn2" id="sb-out" style="margin-top:6px">Wyloguj</button></div>`
-    :`<div class="notice"><b>Zaloguj się przez Google</b>, a kupony zapiszą się na Twoim koncie i zobaczysz je na każdym urządzeniu.<br><button class="btn2" id="sb-in" style="margin-top:8px;background:var(--pick);color:var(--on)">Zaloguj przez Google</button></div>`;
+    :`<div class="notice"><b>Zaloguj się przez Google</b>, a kupony zapiszą się na Twoim koncie i zobaczysz je na każdym urządzeniu.<br><button class="btn2" id="sb-in" style="margin-top:8px;background:var(--pick);color:var(--on)">Zaloguj przez Google</button>
+      <div class="note" style="margin-top:6px">Google pokaże adres <b>xhgnsrqzpbdviaqerpni.supabase.co</b>: to serwer logowania Typownika (Supabase). Aplikacja dostaje tylko Twoje imię i e-mail.</div></div>`;
 }
 function renderStats(){
   const done=matches.filter(m=>m.status==="finished"&&m.result&&sel.has(m.league)).sort((a,b)=>b.kickoff.localeCompare(a.kickoff));
@@ -984,7 +1009,7 @@ function renderSettings(){
   $("#view").innerHTML=`<h2>Ustawienia</h2>
 
   <section class="panel"><h3>Moje ligi</h3><div class="toggles">${LEAGUES.map(l=>`<label class="tg" for="lg-${l.id}"><span>${esc(l.name)} <span class="note">${esc(l.flag)}</span></span><input type="checkbox" class="sw" id="lg-${l.id}" data-lg="${l.id}" ${sel.has(l.id)?"checked":""}></label>`).join("")}</div>
-  <div class="note">Rozgrywki pojawiają się w aplikacji, gdy mają zaplanowane mecze. Reprezentacje są typowane na podstawie rankingu Elo, a kluby w pucharach z uwzględnieniem siły ich ligi krajowej.</div></section>
+  <div class="note">Rozgrywki pojawiają się w aplikacji, gdy mają zaplanowane mecze. Reprezentacje są typowane na podstawie rankingu siły (patrz Legenda na dole), a kluby w pucharach z uwzględnieniem siły ich ligi krajowej.</div></section>
   <section class="panel"><h3>Źródła danych</h3>
     <div class="toggles">
       <div class="tg"><span>Kursy rynkowe (The Odds API)</span><b class="${metaDoc?.keys?.odds?"c-h":""}" style="${metaDoc?.keys?.odds?"":"color:var(--bad)"}">${metaDoc?.keys?.odds?"podłączone":"brak klucza"}</b></div>
