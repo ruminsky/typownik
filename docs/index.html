@@ -957,11 +957,24 @@ async function saveCoupon(c){
 async function deleteCoupon(i){ const c=coupons[i];
   if(c._id&&sb&&(await sb.from("coupons").delete().eq("id",c._id)).error){ alert("Nie udało się usunąć kuponu. Sprawdź internet."); return; }
   coupons.splice(i,1); store.set("coupons",coupons.filter(x=>!x._id)); }
+// Google's own button: the sign-in window shows this site's address (ruminsky.github.io) instead of the Supabase server's
+const GCLIENT="563753241729-abtjsfs3dt3idkmrilj30c5qjumhhl8g.apps.googleusercontent.com";
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");
+async function renderGoogleButton(){
+  if(!$("#gbtn")) return;
+  try{ if(!window.google?.accounts?.id) await loadScript("https://accounts.google.com/gsi/client"); }catch(e){ return; } // the link below still works
+  const raw=hex(crypto.getRandomValues(new Uint8Array(16))), hashed=hex(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(raw)));
+  google.accounts.id.initialize({client_id:GCLIENT,nonce:hashed,ux_mode:"popup",auto_select:false,itp_support:true,
+    callback:async r=>{ const {error}=await sb.auth.signInWithIdToken({provider:"google",token:r.credential,nonce:raw});
+      if(error) alert("Nie udało się zalogować. Spróbuj linku „Zaloguj przez stronę Google”."); }});
+  const box=$("#gbtn"); if(box) google.accounts.id.renderButton(box,{theme:"filled_blue",size:"large",shape:"pill",text:"signin_with",locale:"pl",width:260});
+}
 function accountHtml(){
   if(!sb) return "";
   return user?`<div class="note">Zalogowano jako <b>${esc(user.email||"")}</b>. Kupony są zapisane na Twoim koncie. <button class="btn2" id="sb-out" style="margin-top:6px">Wyloguj</button></div>`
-    :`<div class="notice"><b>Zaloguj się przez Google</b>, a kupony zapiszą się na Twoim koncie i zobaczysz je na każdym urządzeniu.<br><button class="btn2" id="sb-in" style="margin-top:8px;background:var(--pick);color:var(--on)">Zaloguj przez Google</button>
-      <div class="note" style="margin-top:6px">Google pokaże adres <b>xhgnsrqzpbdviaqerpni.supabase.co</b>: to serwer logowania Typownika (Supabase). Aplikacja dostaje tylko Twoje imię i e-mail.</div></div>`;
+    :`<div class="notice"><b>Zaloguj się przez Google</b>, a kupony zapiszą się na Twoim koncie i zobaczysz je na każdym urządzeniu.
+      <div id="gbtn" style="margin-top:10px;min-height:44px"></div>
+      <div class="note" style="margin-top:6px">Aplikacja dostaje tylko Twoje imię i e-mail. Przycisk się nie pokazał albo nie działa? <a href="#" id="sb-in">Zaloguj przez stronę Google</a>.</div></div>`;
 }
 function renderStats(){
   const done=matches.filter(m=>m.status==="finished"&&m.result&&sel.has(m.league)).sort((a,b)=>b.kickoff.localeCompare(a.kickoff));
@@ -1001,8 +1014,9 @@ function renderStats(){
   $("#cp-file").onchange=e=>{ const f=[...e.target.files]; if(f.length) readCoupon(f); };
   document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{ if(confirm("Usunąć ten kupon?")){ await deleteCoupon(+b.dataset.del); renderStats(); } });
   const si=$("#sb-in"), so=$("#sb-out");
-  if(si) si.onclick=()=>{ store.set("loginPending",true); sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}}); };
-  if(so) so.onclick=async()=>{ await sb.auth.signOut(); user=null; await syncCoupons(); renderStats(); };
+  if(si) si.onclick=e=>{ e.preventDefault(); store.set("loginPending",true); sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}}); };
+  if(sb&&!user) renderGoogleButton();
+  if(so) so.onclick=async()=>{ window.google?.accounts?.id?.disableAutoSelect(); await sb.auth.signOut(); user=null; await syncCoupons(); renderStats(); };
   if(cpDraft) bindDraft();
 }
 function renderSettings(){
