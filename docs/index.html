@@ -902,13 +902,47 @@ function bindDraft(){
   document.querySelectorAll("[data-cp]").forEach(e=>e.onchange=()=>{ const l=cpDraft.legs[+e.dataset.cp]; l.code=e.value; enrichLeg(l,cpDraft.date); });
   document.querySelectorAll("[data-co]").forEach(e=>e.onchange=()=>{ const l=cpDraft.legs[+e.dataset.co]; l.odds=num(e.value)||null; enrichLeg(l,cpDraft.date); });
   const sv=$("#cp-save"), cn=$("#cp-cancel");
-  if(sv) sv.onclick=()=>{ coupons.unshift({...cpDraft,added:new Date().toISOString()}); store.set("coupons",coupons); cpDraft=null; renderStats(); };
+  if(sv) sv.onclick=async()=>{ sv.disabled=true; await saveCoupon({...cpDraft,added:new Date().toISOString()}); cpDraft=null; renderStats(); };
   if(cn) cn.onclick=()=>{ cpDraft=null; renderStats(); };
+}
+/* ================= ACCOUNT: Google sign-in (Supabase Auth); coupons per user, the database lets each user read only own rows ================= */
+const SUPA={url:"https://xhgnsrqzpbdviaqerpni.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZ25zcnF6cGJkdmlhcWVycG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1OTM5MTIsImV4cCI6MjExMDE2OTkxMn0.tHjJWXelK3e7KiPlBLxYUyzazoKJ4YRYit2LzX7ez0M"}; // public project address and publishable key (safe in the page: row-level security protects the data)
+let sb=null, user=null;
+async function initAuth(){
+  if(!SUPA.url) return;
+  try{ await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"); }catch(e){ return; }
+  sb=supabase.createClient(SUPA.url,SUPA.key,{auth:{persistSession:true,detectSessionInUrl:true,flowType:"implicit"}});
+  sb.auth.onAuthStateChange((ev,session)=>{ const u=session?.user||null;
+    if((u&&u.id)!==(user&&user.id)){ user=u; syncCoupons(); }
+    if(ev==="SIGNED_IN"&&store.get("loginPending",false)){ store.set("loginPending",false); location.hash="skutecznosc"; } });
+  user=(await sb.auth.getSession()).data.session?.user||null; await syncCoupons();
+}
+async function syncCoupons(){ // signed in: coupons from the account (local ones are uploaded once); signed out: this phone only
+  if(user){
+    const local=store.get("coupons",[]);
+    if(local.length&&!(await sb.from("coupons").insert(local.map(c=>({data:c})))).error) store.set("coupons",[]);
+    const {data,error}=await sb.from("coupons").select("id,data").order("created_at",{ascending:false});
+    coupons=error?store.get("coupons",[]):[...store.get("coupons",[]),...data.map(r=>({...r.data,_id:r.id}))];
+  } else coupons=store.get("coupons",[]);
+  if(location.hash==="#skutecznosc") renderStats();
+}
+async function saveCoupon(c){
+  if(user){ const r=await sb.from("coupons").insert({data:c}).select("id").single(); if(!r.error){ coupons.unshift({...c,_id:r.data.id}); return; } }
+  coupons.unshift(c); store.set("coupons",coupons.filter(x=>!x._id)); // offline or signed out: kept on the phone, uploaded after sign-in
+}
+async function deleteCoupon(i){ const c=coupons[i];
+  if(c._id&&sb&&(await sb.from("coupons").delete().eq("id",c._id)).error){ alert("Nie udało się usunąć kuponu. Sprawdź internet."); return; }
+  coupons.splice(i,1); store.set("coupons",coupons.filter(x=>!x._id)); }
+function accountHtml(){
+  if(!sb) return "";
+  return user?`<div class="note">Zalogowano jako <b>${esc(user.email||"")}</b>. Kupony są zapisane na Twoim koncie. <button class="btn2" id="sb-out" style="margin-top:6px">Wyloguj</button></div>`
+    :`<div class="notice"><b>Zaloguj się przez Google</b>, a kupony zapiszą się na Twoim koncie i zobaczysz je na każdym urządzeniu.<br><button class="btn2" id="sb-in" style="margin-top:8px;background:var(--pick);color:var(--on)">Zaloguj przez Google</button></div>`;
 }
 function renderStats(){
   const done=matches.filter(m=>m.status==="finished"&&m.result&&sel.has(m.league)).sort((a,b)=>b.kickoff.localeCompare(a.kickoff));
   const cp=`<section class="panel"><h3>Moje kupony</h3>
-    <p class="prose">Dodaj zrzut ekranu kuponu z Betclic. Aplikacja odczyta zdarzenia, porówna je z typami sprzed meczu i wyciągnie wnioski. Zrzut czyta telefon, nic nie jest wysyłane. Kupony zapisują się tylko na tym telefonie.</p>
+    <p class="prose">Dodaj zrzut ekranu kuponu z Betclic. Aplikacja odczyta zdarzenia, porówna je z typami sprzed meczu i wyciągnie wnioski. Zrzut czyta telefon i nigdzie go nie wysyła${user?"":". Bez logowania kupony zostają tylko na tym telefonie"}.</p>
+    ${accountHtml()}
     <label class="btn2" for="cp-file" style="background:var(--pick);color:var(--on);cursor:pointer">Dodaj kupon (zrzut ekranu)</label>
     <input type="file" id="cp-file" accept="image/*" multiple hidden>
     <div id="cp-out">${cpDraft?draftHtml():""}</div>
@@ -940,11 +974,15 @@ function renderStats(){
   }
   $("#view").innerHTML=`<h2>Skuteczność</h2>${cp}${stats}`;
   $("#cp-file").onchange=e=>{ const f=[...e.target.files]; if(f.length) readCoupon(f); };
-  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ if(confirm("Usunąć ten kupon?")){ coupons.splice(+b.dataset.del,1); store.set("coupons",coupons); renderStats(); } });
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{ if(confirm("Usunąć ten kupon?")){ await deleteCoupon(+b.dataset.del); renderStats(); } });
+  const si=$("#sb-in"), so=$("#sb-out");
+  if(si) si.onclick=()=>{ store.set("loginPending",true); sb.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname}}); };
+  if(so) so.onclick=async()=>{ await sb.auth.signOut(); user=null; await syncCoupons(); renderStats(); };
   if(cpDraft) bindDraft();
 }
 function renderSettings(){
   $("#view").innerHTML=`<h2>Ustawienia</h2>
+
   <section class="panel"><h3>Moje ligi</h3><div class="toggles">${LEAGUES.map(l=>`<label class="tg" for="lg-${l.id}"><span>${esc(l.name)} <span class="note">${esc(l.flag)}</span></span><input type="checkbox" class="sw" id="lg-${l.id}" data-lg="${l.id}" ${sel.has(l.id)?"checked":""}></label>`).join("")}</div>
   <div class="note">Rozgrywki pojawiają się w aplikacji, gdy mają zaplanowane mecze. Reprezentacje są typowane na podstawie rankingu Elo, a kluby w pucharach z uwzględnieniem siły ich ligi krajowej.</div></section>
   <section class="panel"><h3>Źródła danych</h3>
@@ -1012,6 +1050,7 @@ async function loadFiles(){
     return true;
   }catch(e){ return false; }
 }
+initAuth();
 (async()=>{
   if(await loadFiles()) return;
   const db=window.claude? await window.claude.use("db").catch(()=>null):null;

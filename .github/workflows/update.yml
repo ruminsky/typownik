@@ -60,6 +60,11 @@ jobs:
           pip install --quiet argostranslate || echo "instalacja Argos nie powiodła się – angielskie teksty zostaną usunięte"
           python3 -I ~/.typownik/translate_pl.py
 
+      - name: Podtrzymaj bazę kont (darmowy Supabase usypia po 7 dniach bez ruchu)
+        continue-on-error: true
+        run: |
+          curl -s -o /dev/null -w "Supabase %{http_code}\n" "https://xhgnsrqzpbdviaqerpni.supabase.co/rest/v1/coupons?select=id&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhoZ25zcnF6cGJkdmlhcWVycG5pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQ1OTM5MTIsImV4cCI6MjExMDE2OTkxMn0.tHjJWXelK3e7KiPlBLxYUyzazoKJ4YRYit2LzX7ez0M"
       - name: Skopiuj wyniki do strony
         run: |
           T=~/.typownik
