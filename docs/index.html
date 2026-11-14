@@ -216,7 +216,12 @@ nav.tabs button[aria-selected="true"]{background:var(--sel);color:var(--selink)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .legend{margin-top:10px;text-align:left}.legend summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0;min-height:44px;display:flex;align-items:center}
 .legend dl{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin:4px 0 0}.legend dt{font-weight:800;color:var(--ink);white-space:nowrap}.legend dd{margin:0;min-width:0}
-.prop li{grid-template-columns:30px minmax(0,1fr)}.prop li i{color:var(--wpro)}
+.legs{display:flex;flex-direction:column;gap:8px}
+.leg{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.leg-top{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted)}
+.leg-main{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:16px}
+.leg-main .code{flex:none;min-width:28px;text-align:center;border-radius:6px;padding:1px 6px;background:var(--pick);color:var(--on);font-size:14px}
+details.prop>summary .sub{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-top:2px}
 </style>
 
 <div class="wrap">
@@ -892,9 +897,10 @@ function legFor(m,R){ // the most likely result of one match (1, X or 2) with it
   const t=o.side==="h"?m.home:o.side==="a"?m.away:null, why=t?teamPoints(m,p,o.side).pros.slice(0,2).map(x=>x.x):[];
   return {m,p,...o,ev:o.q*o.odds*taxF()-1,text:t?`${t.name} wygra`:"Remis",why};
 }
-function legRow(l){
-  return `<li class="pro"><i>${esc(l.code)}</i><span><b>${esc(l.m.home.name)} – ${esc(l.m.away.name)}</b>: ${esc(l.text)} · kurs ${dec(l.odds,2)} · szansa <b>${pct(l.q)}</b>
-    <span class="note" style="display:block">${l.why.length?esc(l.why.join(" · ")):"przewaga w kursach i rankingu"}</span></span></li>`;
+function legRow(l,extra=""){ // one match per box, so the legs do not blend together
+  return `<div class="leg"><div class="leg-top"><span>${esc(l.m.home.name)} – ${esc(l.m.away.name)}</span><span class="num">${esc(shortDay(l.m.kickoff))} · ${fmtTime(l.m.kickoff)}</span></div>
+    <div class="leg-main"><b class="code">${esc(l.code)}</b><b>${esc(l.text)}</b><span class="num">kurs <b>${dec(l.odds,2)}</b> · szansa <b>${pct(l.q)}</b></span></div>
+    ${extra}${l.why.length?`<div class="note">${esc(l.why.join(" · "))}</div>`:""}</div>`;
 }
 function proposalsHtml(dm){
   const R=couponRules(), soon=Date.now()+15*60e3;
@@ -902,17 +908,17 @@ function proposalsHtml(dm){
   const rules=`<details class="whybar"><summary>Na jakiej podstawie <span class="chev"></span></summary><div style="padding:0 2px 8px">
     <p class="prose">Biorę zdarzenia z kursem Betclic, których szansa po korekcie na rozliczonych meczach wynosi co najmniej ${pct(R.minP)}. Na kupon wchodzą najmocniejsze, najwyżej ${R.maxLegs}, dopóki łączna szansa nie spada poniżej 40%.</p>
     ${R.why.length?R.why.map(w=>`<p class="prose">${w}</p>`).join(""):`<p class="prose">Z Twoich kuponów nie ma jeszcze wniosków, więc działają ustawienia startowe. Każdy dodany kupon może zmienić te zasady.</p>`}</div></details>`;
-  if(!legs.length) return `<section class="panel whyin prop"><h3>Proponowany kupon</h3><p class="prose">Na ten dzień nie proponuję kuponu: żaden mecz nie ma wyniku z szansą od ${pct(R.minP)} albo nie ma jeszcze kursów Betclic (pobieram je na 3 dni przed meczem). Lepiej nie grać niż dokładać rzut monetą.</p>${rules}</section>`;
+  const box=(sum,body)=>`<details class="sec prop"><summary><span>Proponowany kupon <span class="sub">${sum}</span></span><span class="chev"></span></summary><div class="in whyin">${body}${rules}</div></details>`;
+  if(!legs.length) return box("brak na ten dzień",`<p class="prose">Na ten dzień nie proponuję kuponu: żaden mecz nie ma wyniku z szansą od ${pct(R.minP)} albo nie ma jeszcze kursów Betclic (pobieram je na 3 dni przed meczem). Lepiej nie grać niż dokładać rzut monetą.</p>`);
   const ako=[]; let P=1;
   for(const l of legs){ if(ako.length>=R.maxLegs||(ako.length>=2&&P*l.q<0.4)) break; ako.push(l); P*=l.q; }
   const O=ako.reduce((a,l)=>a*l.odds,1), ev=P*O*taxF()-1, n10=Math.round(P*10);
   const val=legs.filter(l=>l.ev>0.02).sort((a,b)=>b.ev-a.ev).slice(0,2);
-  return `<section class="panel whyin prop"><h3>Proponowany kupon</h3>
-    <ul>${ako.map(legRow).join("")}</ul>
+  return box(`${ako.length} ${plural(ako.length,"mecz","mecze","meczów")} · szansa ${pct(P)} · kurs ${dec(O,2)}`,`
+    <div class="legs">${ako.map(l=>legRow(l)).join("")}</div>
     <div class="kv num"><div><b>${pct(P)}</b><span>szansa, że kupon wejdzie (ok. ${n10} na 10)</span></div><div><b>${dec(O,2)}</b><span>kurs łączny Betclic</span></div></div>
     <p class="prose">${ev>0?`Po 12% podatku kupon ma wartość: oczekiwany zwrot +${Math.round(ev*100)}%.`:`Po 12% podatku oczekiwany zwrot to ${Math.round(ev*100)}%. To najpewniejszy kupon tego dnia, ale na dłuższą metę każdy kupon z kursami bez „Okazji” traci.`}</p>
-    ${val.length?`<h4>Zakłady z wartością (pojedynczo)</h4><ul>${val.map(l=>legRow(l).replace("</span></span></li>",` · zwrot po podatku <b>+${Math.round(l.ev*100)}%</b></span></span></li>`)).join("")}</ul>`:`<p class="note">Zakładów z wartością na ten dzień brak: po 12% podatku żaden kurs Betclic nie jest wyższy od uczciwego.</p>`}
-    ${rules}</section>`;
+    ${val.length?`<h4>Zakłady z wartością (pojedynczo)</h4><div class="legs">${val.map(l=>legRow(l,`<div class="note">zwrot po podatku <b>+${Math.round(l.ev*100)}%</b></div>`)).join("")}</div>`:`<p class="note">Zakładów z wartością na ten dzień brak: po 12% podatku żaden kurs Betclic nie jest wyższy od uczciwego.</p>`}`);
 }
 function couponHtml(c,idx){
   const k=couponCalc(c), col=k.status==="wygrany"?"var(--good)":k.status==="przegrany"?"var(--bad)":"var(--muted)";
