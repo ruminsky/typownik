@@ -1167,6 +1167,18 @@ async function loadFiles(){
     return true;
   }catch(e){ return false; }
 }
+/* new version and fresh data when the home-screen app comes back to the front (iPhone keeps the old page in memory) */
+const BUILD="20261114104226"; // replaced with the publish time; version.txt next to the page holds the newest one
+let lastLoad=Date.now();
+async function checkVersion(){
+  if(BUILD.startsWith("__")) return;
+  try{ const v=(await (await fetch("version.txt?nc="+Date.now(),{cache:"no-store"})).text()).trim();
+    if(/^\d{14}$/.test(v)&&v!==BUILD&&sessionStorage.getItem("reloadedFor")!==v){ // once per version, never a reload loop
+      sessionStorage.setItem("reloadedFor",v); location.replace(location.pathname+"?v="+v+location.hash); } }catch(e){}
+}
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState!=="visible") return;
+  checkVersion(); if(Date.now()-lastLoad>10*60e3){ lastLoad=Date.now(); loadFiles(); } });
+checkVersion();
 initAuth();
 (async()=>{
   if(await loadFiles()) return;
