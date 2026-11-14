@@ -228,7 +228,7 @@ details.dayg>summary{list-style:none;display:flex;align-items:center;gap:10px;pa
 .codebox{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:var(--surface2);border-radius:10px;padding:10px;overflow-x:auto;white-space:pre;user-select:all}
 @media (max-width:380px){.mt b{font-size:16px}.yb .val{font-size:22px}.two{grid-template-columns:1fr}.mc-pick .p{font-size:26px}nav.tabs button{font-size:10px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
-.legend{margin-top:10px;text-align:left}.legend summary{cursor:pointer;font-weight:700;color:var(--ink);padding:6px 0;min-height:44px;display:flex;align-items:center}
+.legend{margin-top:10px;text-align:left}.legend summary{list-style:none;cursor:pointer;font-weight:700;color:var(--ink);padding:0 16px;min-height:44px;display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:999px;background:var(--surface)}.legend summary .chev{color:var(--muted)}.legend[open] summary{margin-bottom:6px}
 .legend dl{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;margin:4px 0 0}.legend dt{font-weight:800;color:var(--ink);white-space:nowrap}.legend dd{margin:0;min-width:0}
 .legs{display:flex;flex-direction:column;gap:8px}
 .leg{background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;min-width:0}
@@ -245,7 +245,7 @@ details.prop>summary .sub{display:block;font-size:13px;font-weight:600;color:var
   </div>
   <main id="view" class="view"></main>
   <footer>Prognozy to prawdopodobieństwa, nie pewniaki. Nawet bardzo dobry model myli się w 4–5 meczach na 10, a bukmacher ma marżę. Graj tylko za kwoty, których stratę akceptujesz. Herby klubów: TheSportsDB. Pomoc: Anonimowi Hazardziści, tel. 801 889 880.
-  <details class="legend"><summary>Legenda skrótów</summary><dl>
+  <details class="legend"><summary>Legenda skrótów <span class="chev"></span></summary><dl>
     <dt>1 / X / 2</dt><dd>wygra gospodarz / remis / wygra gość</dd>
     <dt>1X · X2 · 12</dt><dd>podwójna szansa na kuponie Betclic: gospodarz wygra albo remis · gość wygra albo remis · bez remisu</dd>
     <dt>AKO · SOLO</dt><dd>kupon z kilkoma zdarzeniami (wygrywa tylko, gdy trafisz wszystkie) · kupon z jednym zdarzeniem</dd>
@@ -1198,7 +1198,7 @@ async function loadFiles(){
   }catch(e){ return false; }
 }
 /* new version and fresh data when the home-screen app comes back to the front (iPhone keeps the old page in memory) */
-const BUILD="20261114110048"; // replaced with the publish time; version.txt next to the page holds the newest one
+const BUILD="20261114110325"; // replaced with the publish time; version.txt next to the page holds the newest one
 let lastLoad=Date.now();
 async function checkVersion(){
   if(BUILD.startsWith("__")) return;
