@@ -208,6 +208,20 @@ nav.tabs button[aria-selected="true"]{background:var(--sel);color:var(--selink)}
 .prow .vl b{font-family:var(--display);font-style:italic;font-weight:800;font-size:25px}
 .prow .vl small{display:block;font-size:12px;color:var(--muted);white-space:nowrap}
 .ltab th,.ltab td{padding:7px 3px}
+details.dayg{border-top:1px solid var(--line)}
+details.dayg>summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 16px;min-height:48px;cursor:pointer}
+.dayg .dl{font-weight:800;font-size:15px;flex:none}
+.dayg .dots{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.dayg .dots i{width:9px;height:9px;border-radius:50%;background:var(--bad)}
+.dayg .dots i.y{background:var(--good)}
+.dayg summary>b{font-size:15px;flex:none}
+.dayg summary .chev{flex:none;color:var(--muted)}
+.dayg>table{margin:0 16px 10px;width:calc(100% - 32px)}
+.dayg>table tr:last-child td{border-bottom:0}
+.dayg.older>summary .dl{color:var(--muted)}
+.dayg.older>summary{justify-content:space-between}
+.dayg.older>summary>b{margin-left:auto}
+.dayg.older details.dayg{background:var(--surface2)}
 .ltab td.t{text-align:left}
 .ltab .tn{display:flex;align-items:center;gap:6px;min-width:0}
 .ltab .tn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1054,6 +1068,22 @@ function accountHtml(){
       <div id="gbtn" style="margin-top:10px;min-height:44px"></div>
       <div class="note" style="margin-top:6px">Aplikacja dostaje tylko Twoje imię i e-mail. Przycisk się nie pokazał albo nie działa? <a href="#" id="sb-in">Zaloguj przez stronę Google</a>.</div></div>`;
 }
+// Played matches grouped by day: one line per day (dots = hit/miss), newest day open, days past the first week folded together.
+function pastDay(k){ const y=dkey(new Date(Date.now()-864e5).toISOString());
+  if(k===todayKey()) return "Dziś"; if(k===y) return "Wczoraj";
+  const d=new Date(k+"T12:00:00"); return cap(d.toLocaleDateString("pl-PL",{weekday:"long"}))+" "+d.getDate()+"."+String(d.getMonth()+1).padStart(2,"0"); }
+function playedHtml(rows){
+  const days=[]; for(const r of rows){ const d=days.at(-1); if(d&&d.k===r.k) d.rs.push(r); else days.push({k:r.k,rs:[r]}); }
+  const score=rs=>`${rs.filter(r=>r.ok).length}/${rs.length}`;
+  const box=(d,open)=>{ const rs=[...d.rs].sort((a,b)=>a.ko.localeCompare(b.ko));
+    return `<details class="dayg"${open?" open":""}><summary><span class="dl">${esc(pastDay(d.k))}</span><span class="dots">${rs.map(r=>`<i class="${r.ok?"y":"n"}"></i>`).join("")}</span><b class="num">${score(rs)}</b><span class="chev"></span></summary>
+      <table>${rs.map(r=>r.html).join("")}</table></details>`; };
+  const recent=days.slice(0,7), old=days.slice(7), oldRows=old.flatMap(d=>d.rs);
+  return `<section class="lst played"><h3>Rozegrane mecze</h3>
+    <div class="note" style="padding:0 16px 8px">Wynik, typ aplikacji i jego szansa sprzed meczu. Kropki: zielona to trafiony typ, czerwona to pudło.</div>
+    ${recent.map((d,i)=>box(d,i===0)).join("")}
+    ${old.length?`<details class="dayg older"><summary><span class="dl">Starsze dni (${old.length})</span><b class="num">${score(oldRows)}</b><span class="chev"></span></summary>${old.map(d=>box(d,false)).join("")}</details>`:""}</section>`;
+}
 function renderStats(){
   const done=matches.filter(m=>m.status==="finished"&&m.result&&sel.has(m.league)).sort((a,b)=>b.kickoff.localeCompare(a.kickoff));
   const cp=`<section class="panel"><h3>Moje kupony</h3>
@@ -1075,7 +1105,7 @@ function renderStats(){
       const o={h:r==="1"?1:0,d:r==="X"?1:0,a:r==="2"?1:0}; brier+=bs(p.fin,o);
       if(p.market){ nm++; b2+=bs(p.fin,o); b2m+=bs(p.market,o); }
       (by[m.league]??={n:0,ok:0}); by[m.league].n++; if(ok) by[m.league].ok++;
-      return `<tr><td style="text-align:left">${esc(m.home.name)} – ${esc(m.away.name)}</td><td>${R.h}:${R.a}</td><td>${esc(tp.code)} <span class="note">${pct(tp.p)}</span></td><td style="color:${ok?"var(--good)":"var(--bad)"};font-weight:700">${ok?"✓":"✗"}</td></tr>`; });
+      return {k:dkey(m.kickoff), ko:m.kickoff, ok, html:`<tr><td style="text-align:left">${esc(m.home.name)} – ${esc(m.away.name)}</td><td>${R.h}:${R.a}</td><td>${esc(tp.code)} <span class="note">${pct(tp.p)}</span></td><td style="color:${ok?"var(--good)":"var(--bad)"};font-weight:700">${ok?"✓":"✗"}</td></tr>`}; });
     const kr=k=>k[0]?`${pct(k[1]/k[0])} (${k[1]} z ${k[0]})`:"—";
     stats=`<section class="panel"><h3>Typy aplikacji</h3><div class="kv num">
       <div><b>${kr(kind.single)}</b><span>trafione typy 1 / X / 2</span></div>
@@ -1086,7 +1116,7 @@ function renderStats(){
       <div><b>${nm?dec(b2/nm,3)+" vs "+dec(b2m/nm,3):"—"}</b><span>model vs bukmacher na tych samych ${nm} meczach (niżej = lepiej)</span></div>
     </div>
     <div class="note">${Object.entries(by).map(([k,v])=>`${esc(LMAP[k]?.name||k)}: ${v.ok}/${v.n}`).join(" · ")}. Przy kilkunastu meczach to głównie przypadek; wiarygodny obraz daje dopiero ok. 200 meczów.</div></section>
-    ${calibHtml()}<section class="panel"><h3>Rozegrane mecze</h3><div class="scroll"><table><tr><th style="text-align:left">Mecz</th><th>Wynik</th><th>Typ i szansa</th><th></th></tr>${rows.join("")}</table></div></section>`;
+    ${calibHtml()}${playedHtml(rows)}`;
   }
   $("#view").innerHTML=`<h2>Skuteczność</h2>${cp}${stats}`;
   $("#cp-file").onchange=e=>{ const f=[...e.target.files]; if(f.length) readCoupon(f); };
@@ -1168,7 +1198,7 @@ async function loadFiles(){
   }catch(e){ return false; }
 }
 /* new version and fresh data when the home-screen app comes back to the front (iPhone keeps the old page in memory) */
-const BUILD="20261114104226"; // replaced with the publish time; version.txt next to the page holds the newest one
+const BUILD="20261114110048"; // replaced with the publish time; version.txt next to the page holds the newest one
 let lastLoad=Date.now();
 async function checkVersion(){
   if(BUILD.startsWith("__")) return;
