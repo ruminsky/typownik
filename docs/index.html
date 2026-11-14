@@ -228,7 +228,7 @@ nav.tabs button[aria-selected="true"]{background:var(--sel);color:var(--selink)}
   <footer>Prognozy to prawdopodobieństwa, nie pewniaki. Nawet bardzo dobry model myli się w 4–5 meczach na 10, a bukmacher ma marżę. Graj tylko za kwoty, których stratę akceptujesz. Herby klubów: TheSportsDB. Pomoc: Anonimowi Hazardziści, tel. 801 889 880.
   <details class="legend"><summary>Legenda skrótów</summary><dl>
     <dt>1 / X / 2</dt><dd>wygra gospodarz / remis / wygra gość</dd>
-    <dt>1X · X2 · 12</dt><dd>podwójna szansa: gospodarz nie przegra · gość nie przegra · nie będzie remisu</dd>
+    <dt>1X · X2 · 12</dt><dd>podwójna szansa na kuponie Betclic: gospodarz wygra albo remis · gość wygra albo remis · bez remisu</dd>
     <dt>AKO · SOLO</dt><dd>kupon z kilkoma zdarzeniami (wygrywa tylko, gdy trafisz wszystkie) · kupon z jednym zdarzeniem</dd>
     <dt>W · R · P</dt><dd>wygrana · remis · porażka w ostatnich meczach (forma)</dd>
     <dt>Ranking siły</dt><dd>punkty reprezentacji z rankingu eloratings.net (system Elo). Po każdym meczu drużyna zyskuje albo traci punkty, zależnie od wyniku i siły rywala. 100 pkt przewagi to ok. 64% szans na lepszy wynik.</dd>
@@ -408,17 +408,13 @@ function predict(m){
   const key=fin.h===top?"h":fin.a===top?"a":"d";
   const name=key==="h"?m.home.name:key==="a"?m.away.name:"Remis";
   const main= key==="d"?{code:"X",text:"Remis",p:fin.d,cls:"d"}:{code:key==="h"?"1":"2",text:name+" wygra",p:top,cls:key};
-  const safe= fin.h>=fin.a? {code:"1X",text:m.home.name+" nie przegra",p:fin.h+fin.d} : {code:"X2",text:m.away.name+" nie przegra",p:fin.a+fin.d};
-  const useSafe= top<0.5 || key==="d"; // a single result is tipped only when it is more likely than not
-  // stars rate the pick that is actually shown (single result or double chance)
-  let stars= useSafe
-    ? (safe.p>=0.85?5: safe.p>=0.78?4: safe.p>=0.70?3: safe.p>=0.62?2:1)
-    : (top>=0.62?5: top>=0.53?4: top>=0.46?3: top>=0.40?2:1);
+  // the tip is always one concrete result (1, X or 2); a weak favourite gets the "Ryzyko" warning instead of a double chance
+  let stars= top>=0.62?5: top>=0.53?4: top>=0.46?3: top>=0.40?2:1;
   if(dqScore<=3) stars=Math.max(1,stars-1);
   if(!market) stars=Math.min(stars,3); // without bookmaker prices (e.g. friendlies of small nations) the model alone is not sure enough
-  return {lh,la,factors,M,model,market,fin,o15,o25,o35,btts,scores,stars,main,safe,useSafe,hs,dq,dqScore,L};
+  return {lh,la,factors,M,model,market,fin,o15,o25,o35,btts,scores,stars,main,hs,dq,dqScore,L};
 }
-const tipOf=p=>p.useSafe?{code:p.safe.code,text:p.safe.text,p:p.safe.p,cls:p.fin.h>=p.fin.a?"h":"a"}:p.main;
+const tipOf=p=>p.main;
 
 /* ================= club colours (shields, not official badges) ================= */
 const CREST={
@@ -594,7 +590,7 @@ const pickHtml=(p,tp)=>`<div class="mc-pick"><div class="t"><small>Typ ${esc(tp.
 // coin flip: no single result above 55% – a bad leg for an accumulator
 const riskTop=p=>{ const t=Math.max(p.fin.h,p.fin.d,p.fin.a); return t<0.55?t:null; };
 const riskHtml=p=>{ const t=riskTop(p); if(t==null) return "";
-  return `<div class="risk">⚠ Ryzykowny na kupon: najbardziej prawdopodobny wynik ma tylko ${pct(t)}, to prawie rzut monetą. Na AKO bezpieczniej ${esc(p.safe.code)} (${pct(p.safe.p)}) albo pomiń ten mecz.</div>`; };
+  return `<div class="risk">⚠ Ryzykowny na kupon: najbardziej prawdopodobny wynik ma tylko ${pct(t)}, to prawie rzut monetą. Na AKO lepiej pomiń ten mecz.</div>`; };
 function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
   return `<article class="mcard">
   <button class="cmain" data-id="${esc(m.id)}" aria-label="${esc(m.home.name)} – ${esc(m.away.name)}: pełna analiza">
@@ -743,8 +739,8 @@ function renderDetail(id){
       <div><b>${pct(p.o25)}</b><span>ponad 2,5 gola</span></div>
       <div><b>${pct(p.o35)}</b><span>ponad 3,5 gola</span></div>
       <div><b>${pct(p.fin.h+p.fin.a)}</b><span>ktoś wygra (12)</span></div>
-      <div><b>${pct(p.fin.h+p.fin.d)}</b><span>${esc(m.home.name)} nie przegra (1X)</span></div>
-      <div><b>${pct(p.fin.a+p.fin.d)}</b><span>${esc(m.away.name)} nie przegra (X2)</span></div>
+      <div><b>${pct(p.fin.h+p.fin.d)}</b><span>${esc(m.home.name)} wygra albo remis (1X)</span></div>
+      <div><b>${pct(p.fin.a+p.fin.d)}</b><span>${esc(m.away.name)} wygra albo remis (X2)</span></div>
     </div>
     <h3>Prawdopodobne wyniki (%)</h3>
     <div class="note">Wiersze: gole ${esc(m.home.name)}, kolumny: gole ${esc(m.away.name)}.</div>
@@ -885,22 +881,19 @@ function couponRules(){ // what the saved coupons teach; every rule is shown to 
   const big=coupons.filter(c=>c.legs.length>=4).map(couponCalc).filter(k=>k.status!=="w grze");
   if(big.length) R.why.push(`Kupony z 4 i więcej zdarzeniami: wygrane ${big.filter(k=>k.status==="wygrany").length} z ${big.length}. Dlatego propozycja ma najwyżej ${R.maxLegs} zdarzenia.`);
   const dl=legs.filter(x=>!x.r&&(x.l.code==="1"||x.l.code==="2")&&drew(x.l));
-  if(dl.length) R.why.push(`${dl.length} ${plural(dl.length,"zdarzenie przegrało","zdarzenia przegrały","zdarzeń przegrało")} przez remis (${dl.map(x=>esc(x.l.home)+" – "+esc(x.l.away)).join(", ")}). Dlatego gdy faworyt ma mniej niż 70%, propozycja daje podwójną szansę (1X albo X2).`);
+  if(dl.length){ R.minP=Math.max(R.minP,0.7); R.why.push(`${dl.length} ${plural(dl.length,"zdarzenie przegrało","zdarzenia przegrały","zdarzeń przegrało")} przez remis (${dl.map(x=>esc(x.l.home)+" – "+esc(x.l.away)).join(", ")}). Dlatego propozycja bierze tylko mecze z wyraźnym faworytem: wynik z szansą od 70%.`); }
   if(coupons.some(c=>c.legs.some(l=>l.live))) R.why.push(`Część Twoich zdarzeń była grana w trakcie meczu. Te nie wchodzą do nauki, bo kurs live uwzględniał już wynik.`);
   return R;
 }
-function legFor(m,R){ // best bet on one match for a coupon; double chance odds estimated from Betclic 1/X/2
+function legFor(m,R){ // the most likely result of one match (1, X or 2) with its Betclic odds
   const p=predict(m), bc=m.odds?.betclic; if(!bc||!bc.h||!bc.d||!bc.a) return null;
-  const qh=calP(p.fin.h), qa=calP(p.fin.a), dc=(x,y)=>1/(1/x+1/y);
-  const opts=[{code:"1",q:qh,odds:bc.h,side:"h"},{code:"2",q:qa,odds:bc.a,side:"a"},
-    {code:"1X",q:1-qa,odds:dc(bc.h,bc.d),est:true,side:"h"},{code:"X2",q:1-qh,odds:dc(bc.a,bc.d),est:true,side:"a"}].filter(o=>o.odds>=1.08&&o.q>=R.minP);
-  const single=opts.filter(o=>!o.est).sort((a,b)=>b.q-a.q)[0], dbl=opts.filter(o=>o.est).sort((a,b)=>b.q-a.q)[0];
-  const pick=single&&single.q>=0.7?single:(dbl||single); if(!pick) return null;
-  const t=pick.side==="h"?m.home:m.away, why=teamPoints(m,p,pick.side).pros.slice(0,2).map(x=>x.x);
-  return {m,p,...pick,ev:pick.q*pick.odds*taxF()-1,text:pick.code.length>1?`${t.name} nie przegra`:`${t.name} wygra`,why};
+  const o=[{code:"1",q:calP(p.fin.h),odds:bc.h,side:"h"},{code:"X",q:calP(p.fin.d),odds:bc.d,side:"d"},{code:"2",q:calP(p.fin.a),odds:bc.a,side:"a"}].sort((a,b)=>b.q-a.q)[0];
+  if(o.q<R.minP||o.odds<1.08) return null;
+  const t=o.side==="h"?m.home:o.side==="a"?m.away:null, why=t?teamPoints(m,p,o.side).pros.slice(0,2).map(x=>x.x):[];
+  return {m,p,...o,ev:o.q*o.odds*taxF()-1,text:t?`${t.name} wygra`:"Remis",why};
 }
 function legRow(l){
-  return `<li class="pro"><i>${esc(l.code)}</i><span><b>${esc(l.m.home.name)} – ${esc(l.m.away.name)}</b>: ${esc(l.text)} · kurs ${l.est?"≈":""}${dec(l.odds,2)} · szansa <b>${pct(l.q)}</b>
+  return `<li class="pro"><i>${esc(l.code)}</i><span><b>${esc(l.m.home.name)} – ${esc(l.m.away.name)}</b>: ${esc(l.text)} · kurs ${dec(l.odds,2)} · szansa <b>${pct(l.q)}</b>
     <span class="note" style="display:block">${l.why.length?esc(l.why.join(" · ")):"przewaga w kursach i rankingu"}</span></span></li>`;
 }
 function proposalsHtml(dm){
@@ -909,15 +902,14 @@ function proposalsHtml(dm){
   const rules=`<details class="whybar"><summary>Na jakiej podstawie <span class="chev"></span></summary><div style="padding:0 2px 8px">
     <p class="prose">Biorę zdarzenia z kursem Betclic, których szansa po korekcie na rozliczonych meczach wynosi co najmniej ${pct(R.minP)}. Na kupon wchodzą najmocniejsze, najwyżej ${R.maxLegs}, dopóki łączna szansa nie spada poniżej 40%.</p>
     ${R.why.length?R.why.map(w=>`<p class="prose">${w}</p>`).join(""):`<p class="prose">Z Twoich kuponów nie ma jeszcze wniosków, więc działają ustawienia startowe. Każdy dodany kupon może zmienić te zasady.</p>`}</div></details>`;
-  if(!legs.length) return `<section class="panel whyin prop"><h3>Proponowany kupon</h3><p class="prose">Na ten dzień nie ma jeszcze kursów Betclic albo żadne zdarzenie nie ma szansy od ${pct(R.minP)}. Kursy pobieram na 3 dni przed meczem.</p>${rules}</section>`;
+  if(!legs.length) return `<section class="panel whyin prop"><h3>Proponowany kupon</h3><p class="prose">Na ten dzień nie proponuję kuponu: żaden mecz nie ma wyniku z szansą od ${pct(R.minP)} albo nie ma jeszcze kursów Betclic (pobieram je na 3 dni przed meczem). Lepiej nie grać niż dokładać rzut monetą.</p>${rules}</section>`;
   const ako=[]; let P=1;
   for(const l of legs){ if(ako.length>=R.maxLegs||(ako.length>=2&&P*l.q<0.4)) break; ako.push(l); P*=l.q; }
   const O=ako.reduce((a,l)=>a*l.odds,1), ev=P*O*taxF()-1, n10=Math.round(P*10);
-  const val=legs.filter(l=>!l.est&&l.ev>0.02).sort((a,b)=>b.ev-a.ev).slice(0,2);
+  const val=legs.filter(l=>l.ev>0.02).sort((a,b)=>b.ev-a.ev).slice(0,2);
   return `<section class="panel whyin prop"><h3>Proponowany kupon</h3>
     <ul>${ako.map(legRow).join("")}</ul>
-    ${ako.some(l=>l.est)?`<div class="note">≈ kurs podwójnej szansy szacuję z kursów 1/X/2 Betclic. Sprawdź go w aplikacji Betclic.</div>`:""}
-    <div class="kv num"><div><b>${pct(P)}</b><span>szansa, że kupon wejdzie (ok. ${n10} na 10)</span></div><div><b>${dec(O,2)}</b><span>kurs łączny${ako.some(l=>l.est)?" (szacunkowy)":""}</span></div></div>
+    <div class="kv num"><div><b>${pct(P)}</b><span>szansa, że kupon wejdzie (ok. ${n10} na 10)</span></div><div><b>${dec(O,2)}</b><span>kurs łączny Betclic</span></div></div>
     <p class="prose">${ev>0?`Po 12% podatku kupon ma wartość: oczekiwany zwrot +${Math.round(ev*100)}%.`:`Po 12% podatku oczekiwany zwrot to ${Math.round(ev*100)}%. To najpewniejszy kupon tego dnia, ale na dłuższą metę każdy kupon z kursami bez „Okazji” traci.`}</p>
     ${val.length?`<h4>Zakłady z wartością (pojedynczo)</h4><ul>${val.map(l=>legRow(l).replace("</span></span></li>",` · zwrot po podatku <b>+${Math.round(l.ev*100)}%</b></span></span></li>`)).join("")}</ul>`:`<p class="note">Zakładów z wartością na ten dzień brak: po 12% podatku żaden kurs Betclic nie jest wyższy od uczciwego.</p>`}
     ${rules}</section>`;
@@ -935,8 +927,7 @@ function couponHtml(c,idx){
   if(k.live) why.push(`${k.live} ${k.live===1?"zdarzenie ma":"zdarzenia mają"} kurs inny niż przed meczem, czyli zakład zawarty w trakcie meczu. Model ocenia mecze przed pierwszym gwizdkiem, więc dla zakładów live liczy tylko, co mówiły szanse przed meczem.`);
   c.legs.forEach((l,i)=>{ if(k.res[i]!==false) return; const m=l.matchId&&matches.find(x=>x.id===l.matchId), h=l.hg??m?.result?.h, a=l.ag??m?.result?.a;
     let t=`<b>${esc(l.home)} – ${esc(l.away)} ${h}:${a}</b>: grałeś ${esc(l.code)}${l.p!=null?`, aplikacja dawała ${pct(l.p)}, czyli w ${Math.round((1-l.p)*10)} na 10 takich meczów ten typ nie wchodzi`:""}.`;
-    if(m&&(l.code==="1"||l.code==="2")){ const p=predict(m), dcC=l.code==="1"?"1X":"X2", dcP=l.code==="1"?p.fin.h+p.fin.d:p.fin.a+p.fin.d;
-      t+=` Podwójna szansa ${dcC} dawała ${pct(dcP)}${h===a?" i by weszła":""}.`; }
+    if(m&&(l.code==="1"||l.code==="2")){ const p=predict(m); t+=h===a?` Padł remis, któremu aplikacja dawała ${pct(p.fin.d)}.`:` Wygrał rywal, któremu aplikacja dawała ${pct(l.code==="1"?p.fin.a:p.fin.h)}.`; }
     why.push(t); });
   const weakL=c.legs.filter(l=>l.p!=null&&l.p<0.65);
   if(k.P!=null&&weakL.length&&weakL.length<c.legs.length){ const rest=c.legs.filter(l=>!weakL.includes(l)), P2=rest.reduce((x,l)=>x*l.p,1), O2=rest.reduce((x,l)=>x*(l.odds||1),1);
@@ -957,7 +948,7 @@ function couponLessons(){ // conclusions across all saved coupons
   const avgLegs=coupons.reduce((a,c)=>a+c.legs.length,0)/coupons.length;
   const tips=[];
   const lw=lostBy.filter(k=>k.decider.p!=null&&k.decider.p<0.65).length;
-  if(lw) tips.push(`${lw} z ${lostBy.length} przegranych kuponów popsuło zdarzenie, któremu aplikacja dawała mniej niż 65%. Na AKO bierz typy od 65% (4–5★), a słabsze zamieniaj na podwójną szansę.`);
+  if(lw) tips.push(`${lw} z ${lostBy.length} przegranych kuponów popsuło zdarzenie, któremu aplikacja dawała mniej niż 65%. Na AKO bierz typy od 65% (4–5★), a mecze bez wyraźnego faworyta pomijaj.`);
   if(avgLegs>=4) tips.push(`Średnio ${dec(avgLegs,1)} zdarzenia na kupon. Każde kolejne mnoży ryzyko: 4 zdarzenia po 75% to razem tylko ${pct(0.75**4)} szans.`);
   if(coupons.some(c=>c.legs.some(l=>l.live))) tips.push(`Część zakładów była zawierana w trakcie meczu. Kurs live uwzględnia aktualny wynik, a typ w aplikacji pokazuje szanse sprzed meczu, więc ich nie porównuj.`);
   if(legs.length&&!legs.some(x=>x.l.p!=null&&x.l.odds&&x.l.p*x.l.odds*taxF()>1.05&&!x.l.live)) tips.push(`Żadne zdarzenie na Twoich kuponach nie miało wartości po podatku. Szukaj meczów z oznaczeniem „Okazja”: tylko takie zakłady opłacają się na dłuższą metę.`);
@@ -1068,11 +1059,11 @@ function renderStats(){
     ${coupons.map(couponHtml).join("")}</section>${couponLessons()}`;
   let stats=`<div class="notice"><b>Jeszcze nie ma rozliczonych meczów.</b> Po każdym meczu zapisywany jest wynik. Tutaj zobaczysz, jak często typ się sprawdza i czy model ocenia szanse lepiej niż bukmacher.</div>`;
   if(done.length){
-    let hit=0,brier=0,ou=0,nS=0,hitS=0,b2=0,b2m=0,nm=0; const by={}, kind={single:[0,0],dbl:[0,0]};
+    let hit=0,brier=0,ou=0,nS=0,hitS=0,b2=0,b2m=0,nm=0; const by={}, kind={single:[0,0],strong:[0,0]};
     const bs=(f,o)=>(f.h-o.h)**2+(f.d-o.d)**2+(f.a-o.a)**2;
     const rows=done.map(m=>{ const p=predict(m), tp=tipOf(p); const R=m.result; const r=R.h>R.a?"1":R.h<R.a?"2":"X";
       const ok=tp.code.includes(r); if(ok)hit++;
-      const kd=tp.code.length>1?kind.dbl:kind.single; kd[0]++; if(ok) kd[1]++;
+      kind.single[0]++; if(ok) kind.single[1]++; if(tp.p>=0.65){ kind.strong[0]++; if(ok) kind.strong[1]++; }
       if(p.stars>=4){nS++; if(ok)hitS++;}
       if((R.h+R.a>2)===(p.o25>=0.5)) ou++;
       const o={h:r==="1"?1:0,d:r==="X"?1:0,a:r==="2"?1:0}; brier+=bs(p.fin,o);
@@ -1082,7 +1073,7 @@ function renderStats(){
     const kr=k=>k[0]?`${pct(k[1]/k[0])} (${k[1]} z ${k[0]})`:"—";
     stats=`<section class="panel"><h3>Typy aplikacji</h3><div class="kv num">
       <div><b>${kr(kind.single)}</b><span>trafione typy 1 / X / 2</span></div>
-      <div><b>${kr(kind.dbl)}</b><span>trafiona podwójna szansa</span></div>
+      <div><b>${kr(kind.strong)}</b><span>trafione typy z szansą od 65%</span></div>
       <div><b>${nS?pct(hitS/nS):"—"}</b><span>trafione typy 4–5★ (${nS})</span></div>
       <div><b>${pct(ou/done.length)}</b><span>trafione over/under 2,5</span></div>
       <div><b>${dec(brier/done.length,3)}</b><span>Brier score: im niżej, tym lepiej (0,667 = zgadywanie)</span></div>
@@ -1126,7 +1117,7 @@ function renderSettings(){
     <button class="btn2" id="s-reset">Przywróć domyślne</button></section>
   <section class="panel"><h3>Jak czytać typ</h3><div style="display:flex;flex-direction:column;gap:8px">
     <p class="prose"><b>Żółte przyciski 1 / X / 2</b> pokazują szansę na wygraną gospodarza, remis i wygraną gościa. Pasek pod przyciskiem rośnie razem z szansą, a zielony oznacza typ modelu.</p>
-    <p class="prose"><b>Typ</b>: gdy żaden wynik nie ma wyraźnej przewagi, aplikacja proponuje bezpieczniejszą podwójną szansę (1X albo X2).</p>
+    <p class="prose"><b>Typ</b> to zawsze konkretny wynik: wygra gospodarz (1), remis (X) albo wygra gość (2). Gdy żaden wynik nie ma ponad 55% szans, przy meczu pojawia się ostrzeżenie „Ryzyko”.</p>
     <p class="prose"><b>Gwiazdki (1–5)</b>: jak mocny jest typ. Przy niepełnych danych liczba gwiazdek jest obniżana.</p>
     <p class="prose"><b>Dlaczego taki typ?</b> Rozwiń pasek pod meczem, a zobaczysz, co przemawia za faworytem, dlaczego rywal ma mniejsze szanse i co może pójść inaczej.</p>
     <p class="prose"><b>Kurs opłaca się od (okazja)</b>: jeśli Betclic daje wyższy kurs, zakład ma wartość według modelu. Na dłuższą metę opłacają się tylko takie zakłady.</p>
