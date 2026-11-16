@@ -1,31 +1,31 @@
 {
- "updatedAt": "2026-11-15T21:15:20Z",
+ "updatedAt": "2026-11-16T21:56:58Z",
  "source": "https://www.eloratings.net/World.tsv",
  "namesSource": "https://www.eloratings.net/en.teams.tsv",
- "sourceLastModified": "2026-11-15T21:11:53Z",
+ "sourceLastModified": "2026-11-16T18:19:47Z",
  "count": 244,
  "teams": {
   "Spain": {
    "code": "ES",
-   "rating": 2290,
+   "rating": 2258,
    "rank": 1,
    "pl": "Hiszpania"
+  },
+  "England": {
+   "code": "EN",
+   "rating": 2182,
+   "rank": 2,
+   "pl": "Anglia"
   },
   "Argentina": {
    "code": "AR",
    "rating": 2157,
-   "rank": 2,
-   "pl": "Argentyna"
-  },
-  "England": {
-   "code": "EN",
-   "rating": 2150,
    "rank": 3,
-   "pl": "Anglia"
+   "pl": "Argentyna"
   },
   "France": {
    "code": "FR",
-   "rating": 2066,
+   "rating": 2069,
    "rank": 4,
    "pl": "Francja"
   },
@@ -35,29 +35,29 @@
    "rank": 5,
    "pl": "Portugalia"
   },
+  "Belgium": {
+   "code": "BE",
+   "rating": 1994,
+   "rank": 6,
+   "pl": "Belgia"
+  },
   "Colombia": {
    "code": "CO",
    "rating": 1992,
-   "rank": 6,
+   "rank": 7,
    "pl": "Kolumbia"
   },
   "Netherlands": {
    "code": "NL",
    "rating": 1990,
-   "rank": 7,
+   "rank": 8,
    "pl": "Holandia"
   },
   "Brazil": {
    "code": "BR",
    "rating": 1982,
-   "rank": 8,
-   "pl": "Brazylia"
-  },
-  "Belgium": {
-   "code": "BE",
-   "rating": 1971,
    "rank": 9,
-   "pl": "Belgia"
+   "pl": "Brazylia"
   },
   "Switzerland": {
    "code": "CH",
@@ -67,7 +67,7 @@
   },
   "Italy": {
    "code": "IT",
-   "rating": 1948,
+   "rating": 1925,
    "rank": 11,
    "pl": "Włochy"
   },
@@ -109,14 +109,14 @@
   },
   "Croatia": {
    "code": "HR",
-   "rating": 1852,
+   "rating": 1858,
    "rank": 18,
    "pl": "Chorwacja"
   },
   "Ecuador": {
    "code": "EC",
    "rating": 1852,
-   "rank": 18,
+   "rank": 19,
    "pl": "Ekwador"
   },
   "Austria": {
@@ -139,7 +139,7 @@
   },
   "Senegal": {
    "code": "SN",
-   "rating": 1808,
+   "rating": 1812,
    "rank": 23,
    "pl": "Senegal"
   },
@@ -179,17 +179,17 @@
    "rank": 29,
    "pl": "Węgry"
   },
-  "Turkey": {
-   "code": "TR",
-   "rating": 1753,
-   "rank": 30,
-   "pl": "Turcja"
-  },
   "Canada": {
    "code": "CA",
    "rating": 1753,
    "rank": 30,
    "pl": "Kanada"
+  },
+  "Turkey": {
+   "code": "TR",
+   "rating": 1750,
+   "rank": 31,
+   "pl": "Turcja"
   },
   "Iran": {
    "code": "IR",
@@ -305,41 +305,47 @@
    "rank": 50,
    "pl": "Serbia"
   },
-  "Slovakia": {
-   "code": "SK",
-   "rating": 1662,
-   "rank": 50,
-   "pl": "Słowacja"
-  },
   "Bosnia and Herzegovina": {
    "code": "BA",
    "rating": 1662,
    "rank": 50,
    "pl": "Bośnia i Hercegowina"
   },
-  "Czechia": {
-   "code": "CZ",
-   "rating": 1653,
+  "Panama": {
+   "code": "PA",
+   "rating": 1661,
+   "rank": 52,
+   "pl": "Panama"
+  },
+  "Slovakia": {
+   "code": "SK",
+   "rating": 1652,
    "rank": 53,
-   "pl": "Czechy"
+   "pl": "Słowacja"
   },
   "Saudi Arabia": {
    "code": "SA",
    "rating": 1652,
-   "rank": 54,
+   "rank": 53,
    "pl": "Arabia Saudyjska"
-  },
-  "Panama": {
-   "code": "PA",
-   "rating": 1650,
-   "rank": 55,
-   "pl": "Panama"
   },
   "Albania": {
    "code": "AL",
    "rating": 1650,
    "rank": 55,
    "pl": "Albania"
+  },
+  "Czechia": {
+   "code": "CZ",
+   "rating": 1647,
+   "rank": 56,
+   "pl": "Czechy"
+  },
+  "Cameroon": {
+   "code": "CM",
+   "rating": 1636,
+   "rank": 57,
+   "pl": "Kamerun"
   },
   "Uzbekistan": {
    "code": "UZ",
@@ -350,26 +356,20 @@
   "Mali": {
    "code": "ML",
    "rating": 1634,
-   "rank": 58,
+   "rank": 59,
    "pl": "Mali"
   },
   "Iceland": {
    "code": "IS",
    "rating": 1632,
-   "rank": 59,
+   "rank": 60,
    "pl": "Islandia"
   },
   "Israel": {
    "code": "IL",
    "rating": 1629,
-   "rank": 60,
-   "pl": "Izrael"
-  },
-  "Cameroon": {
-   "code": "CM",
-   "rating": 1627,
    "rank": 61,
-   "pl": "Kamerun"
+   "pl": "Izrael"
   },
   "Jordan": {
    "code": "JO",
@@ -479,17 +479,17 @@
    "rank": 79,
    "pl": "Białoruś"
   },
+  "Ghana": {
+   "code": "GH",
+   "rating": 1515,
+   "rank": 80,
+   "pl": "Ghana"
+  },
   "Finland": {
    "code": "FI",
    "rating": 1515,
    "rank": 80,
    "pl": "Finlandia"
-  },
-  "Ghana": {
-   "code": "GH",
-   "rating": 1514,
-   "rank": 81,
-   "pl": "Ghana"
   },
   "Guatemala": {
    "code": "GT",
@@ -503,21 +503,21 @@
    "rank": 83,
    "pl": "Palestyna"
   },
-  "Curaçao": {
-   "code": "CW",
-   "rating": 1495,
-   "rank": 84,
-   "pl": "Curaçao"
-  },
   "Tunisia": {
    "code": "TN",
    "rating": 1485,
-   "rank": 85,
+   "rank": 84,
    "pl": "Tunezja"
+  },
+  "Curaçao": {
+   "code": "CW",
+   "rating": 1484,
+   "rank": 85,
+   "pl": "Curaçao"
   },
   "Guinea": {
    "code": "GN",
-   "rating": 1468,
+   "rating": 1479,
    "rank": 86,
    "pl": "Gwinea"
   },
@@ -547,7 +547,7 @@
   },
   "Benin": {
    "code": "BJ",
-   "rating": 1448,
+   "rating": 1455,
    "rank": 91,
    "pl": "Benin"
   },
@@ -593,35 +593,29 @@
    "rank": 98,
    "pl": "Kurdystan"
   },
+  "Faroe Islands": {
+   "code": "FO",
+   "rating": 1422,
+   "rank": 99,
+   "pl": "Wyspy Owcze"
+  },
   "Bulgaria": {
    "code": "BG",
    "rating": 1415,
-   "rank": 99,
+   "rank": 100,
    "pl": "Bułgaria"
   },
-  "Faroe Islands": {
-   "code": "FO",
-   "rating": 1413,
-   "rank": 100,
-   "pl": "Wyspy Owcze"
+  "Zimbabwe": {
+   "code": "ZW",
+   "rating": 1408,
+   "rank": 101,
+   "pl": "Zimbabwe"
   },
   "Vietnam": {
    "code": "VN",
    "rating": 1400,
-   "rank": 101,
-   "pl": "Wietnam"
-  },
-  "Equatorial Guinea": {
-   "code": "GQ",
-   "rating": 1391,
    "rank": 102,
-   "pl": "Gwinea Równikowa"
-  },
-  "Zimbabwe": {
-   "code": "ZW",
-   "rating": 1382,
-   "rank": 103,
-   "pl": "Zimbabwe"
+   "pl": "Wietnam"
   },
   "Rwanda": {
    "code": "RW",
@@ -632,14 +626,20 @@
   "Zambia": {
    "code": "ZM",
    "rating": 1381,
-   "rank": 105,
+   "rank": 104,
    "pl": "Zambia"
   },
   "Thailand": {
    "code": "TH",
    "rating": 1379,
-   "rank": 106,
+   "rank": 105,
    "pl": "Tajlandia"
+  },
+  "Kazakhstan": {
+   "code": "KZ",
+   "rating": 1377,
+   "rank": 106,
+   "pl": "Kazachstan"
   },
   "North Korea": {
    "code": "KP",
@@ -659,11 +659,11 @@
    "rank": 109,
    "pl": "Niger"
   },
-  "Kazakhstan": {
-   "code": "KZ",
-   "rating": 1367,
+  "Equatorial Guinea": {
+   "code": "GQ",
+   "rating": 1365,
    "rank": 110,
-   "pl": "Kazachstan"
+   "pl": "Gwinea Równikowa"
   },
   "Togo": {
    "code": "TG",
@@ -725,17 +725,17 @@
    "rank": 120,
    "pl": "Trynidad i Tobago"
   },
-  "Sudan": {
-   "code": "SD",
-   "rating": 1337,
-   "rank": 121,
-   "pl": "Sudan"
-  },
   "El Salvador": {
    "code": "SV",
    "rating": 1333,
-   "rank": 122,
+   "rank": 121,
    "pl": "Salwador"
+  },
+  "Sudan": {
+   "code": "SD",
+   "rating": 1333,
+   "rank": 121,
+   "pl": "Sudan"
   },
   "Bahrain": {
    "code": "BH",
@@ -809,12 +809,6 @@
    "rank": 134,
    "pl": "Kuwejt"
   },
-  "Moldova": {
-   "code": "MD",
-   "rating": 1308,
-   "rank": 135,
-   "pl": "Mołdawia"
-  },
   "Botswana": {
    "code": "BW",
    "rating": 1308,
@@ -824,32 +818,38 @@
   "Sierra Leone": {
    "code": "SL",
    "rating": 1303,
-   "rank": 137,
+   "rank": 136,
    "pl": "Sierra Leone"
   },
   "Burundi": {
    "code": "BI",
    "rating": 1302,
-   "rank": 138,
+   "rank": 137,
    "pl": "Burundi"
-  },
-  "Namibia": {
-   "code": "NA",
-   "rating": 1301,
-   "rank": 139,
-   "pl": "Namibia"
   },
   "Martinique": {
    "code": "MQ",
    "rating": 1299,
-   "rank": 140,
+   "rank": 138,
    "pl": "Martynika"
   },
   "Ethiopia": {
    "code": "ET",
    "rating": 1299,
-   "rank": 140,
+   "rank": 138,
    "pl": "Etiopia"
+  },
+  "Moldova": {
+   "code": "MD",
+   "rating": 1299,
+   "rank": 138,
+   "pl": "Mołdawia"
+  },
+  "Namibia": {
+   "code": "NA",
+   "rating": 1292,
+   "rank": 141,
+   "pl": "Namibia"
   },
   "Lebanon": {
    "code": "LB",
@@ -949,21 +949,21 @@
   },
   "Eritrea": {
    "code": "ER",
-   "rating": 1201,
+   "rating": 1190,
    "rank": 158,
    "pl": "Erytrea"
-  },
-  "Central African Republic": {
-   "code": "CF",
-   "rating": 1193,
-   "rank": 159,
-   "pl": "Republika Środkowoafrykańska"
   },
   "New Caledonia": {
    "code": "NC",
    "rating": 1186,
-   "rank": 160,
+   "rank": 159,
    "pl": "Nowa Kaledonia"
+  },
+  "Central African Republic": {
+   "code": "CF",
+   "rating": 1186,
+   "rank": 159,
+   "pl": "Republika Środkowoafrykańska"
   },
   "Lesotho": {
    "code": "LS",
@@ -1147,7 +1147,7 @@
   },
   "Somalia": {
    "code": "SO",
-   "rating": 974,
+   "rating": 973,
    "rank": 191,
    "pl": "Somalia"
   },
