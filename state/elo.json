@@ -1,8 +1,8 @@
 {
- "updatedAt": "2026-11-16T21:56:58Z",
+ "updatedAt": "2026-11-17T23:39:29Z",
  "source": "https://www.eloratings.net/World.tsv",
  "namesSource": "https://www.eloratings.net/en.teams.tsv",
- "sourceLastModified": "2026-11-16T18:19:47Z",
+ "sourceLastModified": "2026-11-17T21:59:56Z",
  "count": 244,
  "teams": {
   "Spain": {
@@ -31,7 +31,7 @@
   },
   "Portugal": {
    "code": "PT",
-   "rating": 1996,
+   "rating": 2005,
    "rank": 5,
    "pl": "Portugalia"
   },
@@ -47,59 +47,59 @@
    "rank": 7,
    "pl": "Kolumbia"
   },
-  "Netherlands": {
-   "code": "NL",
-   "rating": 1990,
-   "rank": 8,
-   "pl": "Holandia"
-  },
   "Brazil": {
    "code": "BR",
-   "rating": 1982,
-   "rank": 9,
+   "rating": 1983,
+   "rank": 8,
    "pl": "Brazylia"
   },
   "Switzerland": {
    "code": "CH",
-   "rating": 1967,
-   "rank": 10,
+   "rating": 1976,
+   "rank": 9,
    "pl": "Szwajcaria"
+  },
+  "Germany": {
+   "code": "DE",
+   "rating": 1953,
+   "rank": 10,
+   "pl": "Niemcy"
+  },
+  "Netherlands": {
+   "code": "NL",
+   "rating": 1952,
+   "rank": 11,
+   "pl": "Holandia"
+  },
+  "Norway": {
+   "code": "NO",
+   "rating": 1935,
+   "rank": 12,
+   "pl": "Norwegia"
   },
   "Italy": {
    "code": "IT",
    "rating": 1925,
-   "rank": 11,
+   "rank": 13,
    "pl": "Włochy"
-  },
-  "Denmark": {
-   "code": "DK",
-   "rating": 1920,
-   "rank": 12,
-   "pl": "Dania"
-  },
-  "Germany": {
-   "code": "DE",
-   "rating": 1916,
-   "rank": 13,
-   "pl": "Niemcy"
-  },
-  "Japan": {
-   "code": "JP",
-   "rating": 1916,
-   "rank": 13,
-   "pl": "Japonia"
-  },
-  "Norway": {
-   "code": "NO",
-   "rating": 1909,
-   "rank": 15,
-   "pl": "Norwegia"
   },
   "Morocco": {
    "code": "MA",
-   "rating": 1898,
-   "rank": 16,
+   "rating": 1899,
+   "rank": 14,
    "pl": "Maroko"
+  },
+  "Japan": {
+   "code": "JP",
+   "rating": 1898,
+   "rank": 15,
+   "pl": "Japonia"
+  },
+  "Denmark": {
+   "code": "DK",
+   "rating": 1894,
+   "rank": 16,
+   "pl": "Dania"
   },
   "Uruguay": {
    "code": "UY",
@@ -113,23 +113,23 @@
    "rank": 18,
    "pl": "Chorwacja"
   },
+  "Paraguay": {
+   "code": "PY",
+   "rating": 1856,
+   "rank": 19,
+   "pl": "Paragwaj"
+  },
   "Ecuador": {
    "code": "EC",
    "rating": 1852,
-   "rank": 19,
+   "rank": 20,
    "pl": "Ekwador"
   },
   "Austria": {
    "code": "AT",
-   "rating": 1849,
-   "rank": 20,
-   "pl": "Austria"
-  },
-  "Paraguay": {
-   "code": "PY",
    "rating": 1838,
    "rank": 21,
-   "pl": "Paragwaj"
+   "pl": "Austria"
   },
   "Mexico": {
    "code": "MX",
@@ -145,45 +145,45 @@
   },
   "United States": {
    "code": "US",
-   "rating": 1803,
+   "rating": 1804,
    "rank": 24,
    "pl": "USA"
   },
-  "Australia": {
-   "code": "AU",
-   "rating": 1794,
-   "rank": 25,
-   "pl": "Australia"
-  },
   "Greece": {
    "code": "GR",
-   "rating": 1788,
-   "rank": 26,
+   "rating": 1797,
+   "rank": 25,
    "pl": "Grecja"
   },
   "Russia": {
    "code": "RU",
-   "rating": 1787,
-   "rank": 27,
+   "rating": 1796,
+   "rank": 26,
    "pl": "Rosja"
   },
   "Sweden": {
    "code": "SE",
-   "rating": 1784,
-   "rank": 28,
+   "rating": 1783,
+   "rank": 27,
    "pl": "Szwecja"
   },
-  "Hungary": {
-   "code": "HU",
-   "rating": 1755,
-   "rank": 29,
-   "pl": "Węgry"
+  "Australia": {
+   "code": "AU",
+   "rating": 1773,
+   "rank": 28,
+   "pl": "Australia"
   },
   "Canada": {
    "code": "CA",
-   "rating": 1753,
-   "rank": 30,
+   "rating": 1762,
+   "rank": 29,
    "pl": "Kanada"
+  },
+  "Slovenia": {
+   "code": "SI",
+   "rating": 1751,
+   "rank": 30,
+   "pl": "Słowenia"
   },
   "Turkey": {
    "code": "TR",
@@ -191,131 +191,131 @@
    "rank": 31,
    "pl": "Turcja"
   },
+  "Hungary": {
+   "code": "HU",
+   "rating": 1746,
+   "rank": 32,
+   "pl": "Węgry"
+  },
   "Iran": {
    "code": "IR",
-   "rating": 1748,
-   "rank": 32,
+   "rating": 1743,
+   "rank": 33,
    "pl": "Iran"
   },
-  "Algeria": {
-   "code": "DZ",
-   "rating": 1746,
-   "rank": 33,
-   "pl": "Algieria"
+  "Ireland": {
+   "code": "IE",
+   "rating": 1728,
+   "rank": 34,
+   "pl": "Irlandia"
+  },
+  "South Korea": {
+   "code": "KR",
+   "rating": 1723,
+   "rank": 35,
+   "pl": "Korea Południowa"
   },
   "Venezuela": {
    "code": "VE",
-   "rating": 1732,
-   "rank": 34,
+   "rating": 1723,
+   "rank": 35,
    "pl": "Wenezuela"
   },
-  "Ivory Coast": {
-   "code": "CI",
-   "rating": 1728,
-   "rank": 35,
-   "pl": "Wybrzeże Kości Słoniowej"
-  },
-  "Slovenia": {
-   "code": "SI",
-   "rating": 1726,
-   "rank": 36,
-   "pl": "Słowenia"
-  },
-  "Scotland": {
-   "code": "SQ",
-   "rating": 1724,
+  "Ukraine": {
+   "code": "UA",
+   "rating": 1721,
    "rank": 37,
-   "pl": "Szkocja"
+   "pl": "Ukraina"
   },
   "Chile": {
    "code": "CL",
    "rating": 1721,
-   "rank": 38,
+   "rank": 37,
    "pl": "Chile"
+  },
+  "Ivory Coast": {
+   "code": "CI",
+   "rating": 1719,
+   "rank": 39,
+   "pl": "Wybrzeże Kości Słoniowej"
+  },
+  "Scotland": {
+   "code": "SQ",
+   "rating": 1715,
+   "rank": 40,
+   "pl": "Szkocja"
   },
   "Egypt": {
    "code": "EG",
-   "rating": 1719,
-   "rank": 39,
+   "rating": 1703,
+   "rank": 41,
    "pl": "Egipt"
-  },
-  "South Korea": {
-   "code": "KR",
-   "rating": 1717,
-   "rank": 40,
-   "pl": "Korea Południowa"
   },
   "Nigeria": {
    "code": "NG",
-   "rating": 1714,
-   "rank": 41,
-   "pl": "Nigeria"
-  },
-  "Ukraine": {
-   "code": "UA",
-   "rating": 1707,
+   "rating": 1699,
    "rank": 42,
-   "pl": "Ukraina"
-  },
-  "Ireland": {
-   "code": "IE",
-   "rating": 1703,
-   "rank": 43,
-   "pl": "Irlandia"
-  },
-  "Kosovo": {
-   "code": "KO",
-   "rating": 1700,
-   "rank": 44,
-   "pl": "Kosowo"
-  },
-  "DR Congo": {
-   "code": "CD",
-   "rating": 1691,
-   "rank": 45,
-   "pl": "DR Konga"
+   "pl": "Nigeria"
   },
   "Northern Ireland": {
    "code": "EI",
-   "rating": 1689,
-   "rank": 46,
+   "rating": 1698,
+   "rank": 43,
    "pl": "Irlandia Północna"
   },
   "Peru": {
    "code": "PE",
    "rating": 1689,
-   "rank": 46,
+   "rank": 44,
    "pl": "Peru"
   },
-  "Wales": {
-   "code": "WA",
-   "rating": 1673,
-   "rank": 48,
-   "pl": "Walia"
+  "Algeria": {
+   "code": "DZ",
+   "rating": 1688,
+   "rank": 45,
+   "pl": "Algieria"
   },
-  "Poland": {
-   "code": "PL",
-   "rating": 1663,
-   "rank": 49,
-   "pl": "Polska"
+  "DR Congo": {
+   "code": "CD",
+   "rating": 1675,
+   "rank": 46,
+   "pl": "DR Konga"
   },
-  "Serbia": {
-   "code": "RS",
-   "rating": 1662,
-   "rank": 50,
-   "pl": "Serbia"
+  "Kosovo": {
+   "code": "KO",
+   "rating": 1675,
+   "rank": 46,
+   "pl": "Kosowo"
   },
   "Bosnia and Herzegovina": {
    "code": "BA",
-   "rating": 1662,
-   "rank": 50,
+   "rating": 1672,
+   "rank": 48,
    "pl": "Bośnia i Hercegowina"
+  },
+  "Poland": {
+   "code": "PL",
+   "rating": 1664,
+   "rank": 49,
+   "pl": "Polska"
+  },
+  "Wales": {
+   "code": "WA",
+   "rating": 1664,
+   "rank": 49,
+   "pl": "Walia"
   },
   "Panama": {
    "code": "PA",
    "rating": 1661,
-   "rank": 52,
+   "rank": 51,
    "pl": "Panama"
+  },
+  "Serbia": {
+   "code": "RS",
+   "rating": 1653,
+   "rank": 52,
+   "pl": "Serbia"
   },
   "Slovakia": {
    "code": "SK",
@@ -323,11 +323,11 @@
    "rank": 53,
    "pl": "Słowacja"
   },
-  "Saudi Arabia": {
-   "code": "SA",
+  "Mali": {
+   "code": "ML",
    "rating": 1652,
    "rank": 53,
-   "pl": "Arabia Saudyjska"
+   "pl": "Mali"
   },
   "Albania": {
    "code": "AL",
@@ -341,41 +341,41 @@
    "rank": 56,
    "pl": "Czechy"
   },
-  "Cameroon": {
-   "code": "CM",
-   "rating": 1636,
-   "rank": 57,
-   "pl": "Kamerun"
-  },
   "Uzbekistan": {
    "code": "UZ",
-   "rating": 1636,
+   "rating": 1646,
    "rank": 57,
    "pl": "Uzbekistan"
   },
-  "Mali": {
-   "code": "ML",
-   "rating": 1634,
-   "rank": 59,
-   "pl": "Mali"
+  "Jordan": {
+   "code": "JO",
+   "rating": 1644,
+   "rank": 58,
+   "pl": "Jordania"
   },
-  "Iceland": {
-   "code": "IS",
-   "rating": 1632,
-   "rank": 60,
-   "pl": "Islandia"
+  "Saudi Arabia": {
+   "code": "SA",
+   "rating": 1642,
+   "rank": 59,
+   "pl": "Arabia Saudyjska"
   },
   "Israel": {
    "code": "IL",
-   "rating": 1629,
-   "rank": 61,
+   "rating": 1640,
+   "rank": 60,
    "pl": "Izrael"
   },
-  "Jordan": {
-   "code": "JO",
-   "rating": 1622,
+  "Iceland": {
+   "code": "IS",
+   "rating": 1639,
+   "rank": 61,
+   "pl": "Islandia"
+  },
+  "Cameroon": {
+   "code": "CM",
+   "rating": 1636,
    "rank": 62,
-   "pl": "Jordania"
+   "pl": "Kamerun"
   },
   "Bolivia": {
    "code": "BO",
@@ -383,29 +383,29 @@
    "rank": 63,
    "pl": "Boliwia"
   },
-  "Georgia": {
-   "code": "GE",
-   "rating": 1598,
+  "South Africa": {
+   "code": "ZA",
+   "rating": 1593,
    "rank": 64,
-   "pl": "Gruzja"
+   "pl": "RPA"
   },
   "Costa Rica": {
    "code": "CR",
-   "rating": 1583,
+   "rating": 1584,
    "rank": 65,
    "pl": "Kostaryka"
   },
-  "South Africa": {
-   "code": "ZA",
-   "rating": 1580,
-   "rank": 66,
-   "pl": "RPA"
+  "Georgia": {
+   "code": "GE",
+   "rating": 1584,
+   "rank": 65,
+   "pl": "Gruzja"
   },
-  "Romania": {
-   "code": "RO",
-   "rating": 1576,
+  "United Arab Emirates": {
+   "code": "AE",
+   "rating": 1577,
    "rank": 67,
-   "pl": "Rumunia"
+   "pl": "Zjednoczone Emiraty Arabskie"
   },
   "Jamaica": {
    "code": "JM",
@@ -413,99 +413,99 @@
    "rank": 68,
    "pl": "Jamajka"
   },
-  "United Arab Emirates": {
-   "code": "AE",
-   "rating": 1570,
-   "rank": 69,
-   "pl": "Zjednoczone Emiraty Arabskie"
-  },
-  "Cape Verde": {
-   "code": "CV",
-   "rating": 1566,
-   "rank": 70,
-   "pl": "Republika Zielonego Przylądka"
-  },
   "Angola": {
    "code": "AO",
-   "rating": 1564,
-   "rank": 71,
+   "rating": 1568,
+   "rank": 69,
    "pl": "Angola"
+  },
+  "Romania": {
+   "code": "RO",
+   "rating": 1566,
+   "rank": 70,
+   "pl": "Rumunia"
   },
   "New Zealand": {
    "code": "NZ",
    "rating": 1563,
-   "rank": 72,
+   "rank": 71,
    "pl": "Nowa Zelandia"
   },
   "Haiti": {
    "code": "HT",
    "rating": 1552,
-   "rank": 73,
+   "rank": 72,
    "pl": "Haiti"
-  },
-  "Iraq": {
-   "code": "IQ",
-   "rating": 1534,
-   "rank": 74,
-   "pl": "Irak"
   },
   "Burkina Faso": {
    "code": "BF",
-   "rating": 1529,
-   "rank": 75,
+   "rating": 1551,
+   "rank": 73,
    "pl": "Burkina Faso"
   },
-  "North Macedonia": {
-   "code": "NM",
-   "rating": 1527,
-   "rank": 76,
-   "pl": "Macedonia Północna"
+  "Iraq": {
+   "code": "IQ",
+   "rating": 1539,
+   "rank": 74,
+   "pl": "Irak"
+  },
+  "Honduras": {
+   "code": "HN",
+   "rating": 1530,
+   "rank": 75,
+   "pl": "Honduras"
   },
   "Montenegro": {
    "code": "ME",
    "rating": 1525,
-   "rank": 77,
+   "rank": 76,
    "pl": "Czarnogóra"
   },
-  "Honduras": {
-   "code": "HN",
-   "rating": 1520,
-   "rank": 78,
-   "pl": "Honduras"
+  "Cape Verde": {
+   "code": "CV",
+   "rating": 1521,
+   "rank": 77,
+   "pl": "Republika Zielonego Przylądka"
   },
   "Belarus": {
    "code": "BY",
    "rating": 1517,
-   "rank": 79,
+   "rank": 78,
    "pl": "Białoruś"
   },
   "Ghana": {
    "code": "GH",
    "rating": 1515,
-   "rank": 80,
+   "rank": 79,
    "pl": "Ghana"
   },
   "Finland": {
    "code": "FI",
    "rating": 1515,
-   "rank": 80,
+   "rank": 79,
    "pl": "Finlandia"
+  },
+  "North Macedonia": {
+   "code": "NM",
+   "rating": 1502,
+   "rank": 81,
+   "pl": "Macedonia Północna"
   },
   "Guatemala": {
    "code": "GT",
-   "rating": 1510,
+   "rating": 1501,
    "rank": 82,
    "pl": "Gwatemala"
   },
   "Palestine": {
    "code": "PS",
-   "rating": 1501,
+   "rating": 1493,
    "rank": 83,
    "pl": "Palestyna"
   },
   "Tunisia": {
    "code": "TN",
-   "rating": 1485,
+   "rating": 1488,
    "rank": 84,
    "pl": "Tunezja"
   },
@@ -523,33 +523,33 @@
   },
   "Gambia": {
    "code": "GM",
-   "rating": 1464,
+   "rating": 1473,
    "rank": 87,
    "pl": "Gambia"
-  },
-  "Qatar": {
-   "code": "QA",
-   "rating": 1461,
-   "rank": 88,
-   "pl": "Katar"
   },
   "Suriname": {
    "code": "SR",
    "rating": 1459,
-   "rank": 89,
+   "rank": 88,
    "pl": "Surinam"
   },
-  "Syria": {
-   "code": "SY",
-   "rating": 1457,
-   "rank": 90,
-   "pl": "Syria"
+  "Qatar": {
+   "code": "QA",
+   "rating": 1455,
+   "rank": 89,
+   "pl": "Katar"
   },
   "Benin": {
    "code": "BJ",
    "rating": 1455,
-   "rank": 91,
+   "rank": 89,
    "pl": "Benin"
+  },
+  "Syria": {
+   "code": "SY",
+   "rating": 1450,
+   "rank": 91,
+   "pl": "Syria"
   },
   "Oman": {
    "code": "OM",
@@ -557,161 +557,161 @@
    "rank": 92,
    "pl": "Oman"
   },
-  "Libya": {
-   "code": "LY",
-   "rating": 1442,
+  "Estonia": {
+   "code": "EE",
+   "rating": 1444,
    "rank": 93,
-   "pl": "Libia"
+   "pl": "Estonia"
   },
   "Northern Cyprus": {
    "code": "NS",
    "rating": 1442,
-   "rank": 93,
+   "rank": 94,
    "pl": "Cypr Północny"
+  },
+  "Libya": {
+   "code": "LY",
+   "rating": 1439,
+   "rank": 95,
+   "pl": "Libia"
   },
   "Uganda": {
    "code": "UG",
-   "rating": 1439,
-   "rank": 95,
-   "pl": "Uganda"
-  },
-  "Estonia": {
-   "code": "EE",
-   "rating": 1430,
+   "rating": 1437,
    "rank": 96,
-   "pl": "Estonia"
-  },
-  "Gabon": {
-   "code": "GA",
-   "rating": 1429,
-   "rank": 97,
-   "pl": "Gabon"
+   "pl": "Uganda"
   },
   "Kurdistan": {
    "code": "KD",
    "rating": 1423,
-   "rank": 98,
+   "rank": 97,
    "pl": "Kurdystan"
+  },
+  "Togo": {
+   "code": "TG",
+   "rating": 1422,
+   "rank": 98,
+   "pl": "Togo"
   },
   "Faroe Islands": {
    "code": "FO",
    "rating": 1422,
-   "rank": 99,
+   "rank": 98,
    "pl": "Wyspy Owcze"
-  },
-  "Bulgaria": {
-   "code": "BG",
-   "rating": 1415,
-   "rank": 100,
-   "pl": "Bułgaria"
   },
   "Zimbabwe": {
    "code": "ZW",
    "rating": 1408,
-   "rank": 101,
+   "rank": 100,
    "pl": "Zimbabwe"
   },
-  "Vietnam": {
-   "code": "VN",
-   "rating": 1400,
+  "Bulgaria": {
+   "code": "BG",
+   "rating": 1401,
+   "rank": 101,
+   "pl": "Bułgaria"
+  },
+  "Gabon": {
+   "code": "GA",
+   "rating": 1397,
    "rank": 102,
-   "pl": "Wietnam"
-  },
-  "Rwanda": {
-   "code": "RW",
-   "rating": 1382,
-   "rank": 103,
-   "pl": "Rwanda"
-  },
-  "Zambia": {
-   "code": "ZM",
-   "rating": 1381,
-   "rank": 104,
-   "pl": "Zambia"
+   "pl": "Gabon"
   },
   "Thailand": {
    "code": "TH",
-   "rating": 1379,
-   "rank": 105,
+   "rating": 1394,
+   "rank": 103,
    "pl": "Tajlandia"
+  },
+  "Zambia": {
+   "code": "ZM",
+   "rating": 1382,
+   "rank": 104,
+   "pl": "Zambia"
+  },
+  "Comoros": {
+   "code": "KM",
+   "rating": 1381,
+   "rank": 105,
+   "pl": "Komory"
+  },
+  "Vietnam": {
+   "code": "VN",
+   "rating": 1378,
+   "rank": 106,
+   "pl": "Wietnam"
+  },
+  "Guinea-Bissau": {
+   "code": "GW",
+   "rating": 1378,
+   "rank": 106,
+   "pl": "Gwinea Bissau"
   },
   "Kazakhstan": {
    "code": "KZ",
    "rating": 1377,
-   "rank": 106,
+   "rank": 108,
    "pl": "Kazachstan"
+  },
+  "Mozambique": {
+   "code": "MZ",
+   "rating": 1376,
+   "rank": 109,
+   "pl": "Mozambik"
   },
   "North Korea": {
    "code": "KP",
    "rating": 1375,
-   "rank": 107,
+   "rank": 110,
    "pl": "Korea Północna"
-  },
-  "Madagascar": {
-   "code": "MG",
-   "rating": 1371,
-   "rank": 108,
-   "pl": "Madagaskar"
   },
   "Niger": {
    "code": "NE",
-   "rating": 1368,
-   "rank": 109,
+   "rating": 1367,
+   "rank": 111,
    "pl": "Niger"
   },
   "Equatorial Guinea": {
    "code": "GQ",
    "rating": 1365,
-   "rank": 110,
+   "rank": 112,
    "pl": "Gwinea Równikowa"
   },
-  "Togo": {
-   "code": "TG",
+  "Rwanda": {
+   "code": "RW",
    "rating": 1364,
-   "rank": 111,
-   "pl": "Togo"
-  },
-  "Comoros": {
-   "code": "KM",
-   "rating": 1364,
-   "rank": 111,
-   "pl": "Komory"
-  },
-  "Kenya": {
-   "code": "KE",
-   "rating": 1360,
    "rank": 113,
-   "pl": "Kenia"
+   "pl": "Rwanda"
   },
   "China": {
    "code": "CN",
-   "rating": 1359,
+   "rating": 1354,
    "rank": 114,
    "pl": "Chiny"
   },
   "Luxembourg": {
    "code": "LU",
-   "rating": 1359,
-   "rank": 114,
+   "rating": 1352,
+   "rank": 115,
    "pl": "Luksemburg"
   },
-  "Guinea-Bissau": {
-   "code": "GW",
-   "rating": 1355,
+  "Madagascar": {
+   "code": "MG",
+   "rating": 1348,
    "rank": 116,
-   "pl": "Gwinea Bissau"
-  },
-  "Mozambique": {
-   "code": "MZ",
-   "rating": 1353,
-   "rank": 117,
-   "pl": "Mozambik"
+   "pl": "Madagaskar"
   },
   "Armenia": {
    "code": "AM",
    "rating": 1348,
-   "rank": 118,
+   "rank": 116,
    "pl": "Armenia"
+  },
+  "Kenya": {
+   "code": "KE",
+   "rating": 1347,
+   "rank": 118,
+   "pl": "Kenia"
   },
   "Reunion": {
    "code": "RE",
@@ -719,47 +719,47 @@
    "rank": 119,
    "pl": "Reunion"
   },
-  "Trinidad and Tobago": {
-   "code": "TT",
-   "rating": 1344,
+  "Azerbaijan": {
+   "code": "AZ",
+   "rating": 1340,
    "rank": 120,
-   "pl": "Trynidad i Tobago"
+   "pl": "Azerbejdżan"
+  },
+  "Guyana": {
+   "code": "GY",
+   "rating": 1338,
+   "rank": 121,
+   "pl": "Gujana"
+  },
+  "Kyrgyzstan": {
+   "code": "KG",
+   "rating": 1338,
+   "rank": 121,
+   "pl": "Kirgistan"
+  },
+  "Bahrain": {
+   "code": "BH",
+   "rating": 1337,
+   "rank": 123,
+   "pl": "Bahrajn"
   },
   "El Salvador": {
    "code": "SV",
    "rating": 1333,
-   "rank": 121,
+   "rank": 124,
    "pl": "Salwador"
   },
   "Sudan": {
    "code": "SD",
    "rating": 1333,
-   "rank": 121,
-   "pl": "Sudan"
-  },
-  "Bahrain": {
-   "code": "BH",
-   "rating": 1332,
-   "rank": 123,
-   "pl": "Bahrajn"
-  },
-  "Azerbaijan": {
-   "code": "AZ",
-   "rating": 1331,
    "rank": 124,
-   "pl": "Azerbejdżan"
+   "pl": "Sudan"
   },
   "Dominican Republic": {
    "code": "DO",
    "rating": 1331,
-   "rank": 124,
-   "pl": "Dominikana"
-  },
-  "Mauritania": {
-   "code": "MR",
-   "rating": 1329,
    "rank": 126,
-   "pl": "Mauretania"
+   "pl": "Dominikana"
   },
   "Indonesia": {
    "code": "ID",
@@ -767,77 +767,65 @@
    "rank": 127,
    "pl": "Indonezja"
   },
-  "Guyana": {
-   "code": "GY",
+  "Malaysia": {
+   "code": "MY",
    "rating": 1327,
    "rank": 128,
-   "pl": "Gujana"
+   "pl": "Malezja"
+  },
+  "Trinidad and Tobago": {
+   "code": "TT",
+   "rating": 1326,
+   "rank": 129,
+   "pl": "Trynidad i Tobago"
   },
   "Cyprus": {
    "code": "CY",
    "rating": 1321,
-   "rank": 129,
+   "rank": 130,
    "pl": "Cypr"
   },
   "Zanzibar": {
    "code": "ZN",
    "rating": 1321,
-   "rank": 129,
+   "rank": 130,
    "pl": "Zanzibar"
-  },
-  "Malaysia": {
-   "code": "MY",
-   "rating": 1316,
-   "rank": 131,
-   "pl": "Malezja"
-  },
-  "Kyrgyzstan": {
-   "code": "KG",
-   "rating": 1316,
-   "rank": 131,
-   "pl": "Kirgistan"
-  },
-  "Tajikistan": {
-   "code": "TJ",
-   "rating": 1312,
-   "rank": 133,
-   "pl": "Tadżykistan"
-  },
-  "Kuwait": {
-   "code": "KW",
-   "rating": 1311,
-   "rank": 134,
-   "pl": "Kuwejt"
-  },
-  "Botswana": {
-   "code": "BW",
-   "rating": 1308,
-   "rank": 135,
-   "pl": "Botswana"
   },
   "Sierra Leone": {
    "code": "SL",
-   "rating": 1303,
-   "rank": 136,
+   "rating": 1319,
+   "rank": 132,
    "pl": "Sierra Leone"
+  },
+  "Liberia": {
+   "code": "LR",
+   "rating": 1315,
+   "rank": 133,
+   "pl": "Liberia"
+  },
+  "Botswana": {
+   "code": "BW",
+   "rating": 1310,
+   "rank": 134,
+   "pl": "Botswana"
+  },
+  "Mauritania": {
+   "code": "MR",
+   "rating": 1307,
+   "rank": 135,
+   "pl": "Mauretania"
+  },
+  "Kuwait": {
+   "code": "KW",
+   "rating": 1301,
+   "rank": 136,
+   "pl": "Kuwejt"
   },
   "Burundi": {
    "code": "BI",
-   "rating": 1302,
-   "rank": 137,
+   "rating": 1301,
+   "rank": 136,
    "pl": "Burundi"
-  },
-  "Martinique": {
-   "code": "MQ",
-   "rating": 1299,
-   "rank": 138,
-   "pl": "Martynika"
-  },
-  "Ethiopia": {
-   "code": "ET",
-   "rating": 1299,
-   "rank": 138,
-   "pl": "Etiopia"
   },
   "Moldova": {
    "code": "MD",
@@ -845,35 +833,53 @@
    "rank": 138,
    "pl": "Mołdawia"
   },
+  "Tajikistan": {
+   "code": "TJ",
+   "rating": 1297,
+   "rank": 139,
+   "pl": "Tadżykistan"
+  },
+  "Lebanon": {
+   "code": "LB",
+   "rating": 1296,
+   "rank": 140,
+   "pl": "Liban"
+  },
   "Namibia": {
    "code": "NA",
    "rating": 1292,
    "rank": 141,
    "pl": "Namibia"
   },
-  "Lebanon": {
-   "code": "LB",
+  "Tanzania": {
+   "code": "TZ",
    "rating": 1288,
    "rank": 142,
-   "pl": "Liban"
+   "pl": "Tanzania"
+  },
+  "Martinique": {
+   "code": "MQ",
+   "rating": 1283,
+   "rank": 143,
+   "pl": "Martynika"
   },
   "Lithuania": {
    "code": "LT",
-   "rating": 1280,
-   "rank": 143,
+   "rating": 1282,
+   "rank": 144,
    "pl": "Litwa"
   },
-  "Tanzania": {
-   "code": "TZ",
-   "rating": 1273,
-   "rank": 144,
-   "pl": "Tanzania"
-  },
-  "Liberia": {
-   "code": "LR",
-   "rating": 1270,
+  "Ethiopia": {
+   "code": "ET",
+   "rating": 1276,
    "rank": 145,
-   "pl": "Liberia"
+   "pl": "Etiopia"
+  },
+  "Cuba": {
+   "code": "CU",
+   "rating": 1263,
+   "rank": 146,
+   "pl": "Kuba"
   },
   "Nicaragua": {
    "code": "NI",
@@ -881,65 +887,59 @@
    "rank": 146,
    "pl": "Nikaragua"
   },
-  "Malta": {
-   "code": "MT",
-   "rating": 1258,
-   "rank": 147,
-   "pl": "Malta"
-  },
   "French Guiana": {
    "code": "GF",
    "rating": 1258,
-   "rank": 147,
+   "rank": 148,
    "pl": "Gujana Francuska"
-  },
-  "Cuba": {
-   "code": "CU",
-   "rating": 1250,
-   "rank": 149,
-   "pl": "Kuba"
   },
   "Guadeloupe": {
    "code": "GP",
-   "rating": 1248,
-   "rank": 150,
+   "rating": 1256,
+   "rank": 149,
    "pl": "Gwadelupa"
+  },
+  "Malawi": {
+   "code": "MW",
+   "rating": 1255,
+   "rank": 150,
+   "pl": "Malawi"
+  },
+  "Malta": {
+   "code": "MT",
+   "rating": 1250,
+   "rank": 151,
+   "pl": "Malta"
   },
   "Latvia": {
    "code": "LV",
    "rating": 1241,
-   "rank": 151,
-   "pl": "Łotwa"
-  },
-  "Malawi": {
-   "code": "MW",
-   "rating": 1239,
    "rank": 152,
-   "pl": "Malawi"
-  },
-  "Yemen": {
-   "code": "YE",
-   "rating": 1224,
-   "rank": 153,
-   "pl": "Jemen"
-  },
-  "Congo": {
-   "code": "CG",
-   "rating": 1220,
-   "rank": 154,
-   "pl": "Kongo"
+   "pl": "Łotwa"
   },
   "Saint Vincent and the Grenadines": {
    "code": "VC",
    "rating": 1220,
-   "rank": 154,
+   "rank": 153,
    "pl": "Saint Vincent i Grenadyny"
   },
   "Mayotte": {
    "code": "YT",
    "rating": 1217,
-   "rank": 156,
+   "rank": 154,
    "pl": "Majotta"
+  },
+  "Yemen": {
+   "code": "YE",
+   "rating": 1213,
+   "rank": 155,
+   "pl": "Jemen"
+  },
+  "Lesotho": {
+   "code": "LS",
+   "rating": 1211,
+   "rank": 156,
+   "pl": "Lesotho"
   },
   "Turkmenistan": {
    "code": "TM",
@@ -947,41 +947,41 @@
    "rank": 157,
    "pl": "Turkmenistan"
   },
+  "Congo": {
+   "code": "CG",
+   "rating": 1203,
+   "rank": 158,
+   "pl": "Kongo"
+  },
   "Eritrea": {
    "code": "ER",
    "rating": 1190,
-   "rank": 158,
+   "rank": 159,
    "pl": "Erytrea"
   },
   "New Caledonia": {
    "code": "NC",
    "rating": 1186,
-   "rank": 159,
+   "rank": 160,
    "pl": "Nowa Kaledonia"
   },
   "Central African Republic": {
    "code": "CF",
    "rating": 1186,
-   "rank": 159,
+   "rank": 160,
    "pl": "Republika Środkowoafrykańska"
-  },
-  "Lesotho": {
-   "code": "LS",
-   "rating": 1179,
-   "rank": 161,
-   "pl": "Lesotho"
   },
   "Puerto Rico": {
    "code": "PR",
-   "rating": 1168,
+   "rating": 1157,
    "rank": 162,
    "pl": "Portoryko"
   },
-  "Tahiti": {
-   "code": "TI",
-   "rating": 1161,
+  "India": {
+   "code": "IN",
+   "rating": 1156,
    "rank": 163,
-   "pl": "Tahiti"
+   "pl": "Indie"
   },
   "Vanuatu": {
    "code": "VU",
@@ -989,23 +989,23 @@
    "rank": 164,
    "pl": "Vanuatu"
   },
+  "Tahiti": {
+   "code": "TI",
+   "rating": 1152,
+   "rank": 165,
+   "pl": "Tahiti"
+  },
   "Eswatini": {
    "code": "SW",
    "rating": 1148,
-   "rank": 165,
+   "rank": 166,
    "pl": "Eswatini"
   },
   "Singapore": {
    "code": "SG",
-   "rating": 1147,
-   "rank": 166,
-   "pl": "Singapur"
-  },
-  "India": {
-   "code": "IN",
    "rating": 1146,
    "rank": 167,
-   "pl": "Indie"
+   "pl": "Singapur"
   },
   "Fiji": {
    "code": "FJ",
@@ -1015,63 +1015,63 @@
   },
   "Philippines": {
    "code": "PH",
-   "rating": 1131,
+   "rating": 1130,
    "rank": 169,
    "pl": "Filipiny"
+  },
+  "Saint Lucia": {
+   "code": "LC",
+   "rating": 1127,
+   "rank": 170,
+   "pl": "Saint Lucia"
   },
   "Hong Kong": {
    "code": "HK",
    "rating": 1114,
-   "rank": 170,
+   "rank": 171,
    "pl": "Hongkong"
   },
   "Papua New Guinea": {
    "code": "PG",
    "rating": 1112,
-   "rank": 171,
+   "rank": 172,
    "pl": "Papua-Nowa Gwinea"
   },
   "Solomon Islands": {
    "code": "SB",
    "rating": 1110,
-   "rank": 172,
-   "pl": "Wyspy Salomona"
-  },
-  "Saint Lucia": {
-   "code": "LC",
-   "rating": 1106,
    "rank": 173,
-   "pl": "Saint Lucia"
+   "pl": "Wyspy Salomona"
   },
   "South Sudan": {
    "code": "SS",
-   "rating": 1095,
+   "rating": 1091,
    "rank": 174,
    "pl": "Sudan Południowy"
-  },
-  "Andorra": {
-   "code": "AD",
-   "rating": 1076,
-   "rank": 175,
-   "pl": "Andora"
   },
   "Chad": {
    "code": "TD",
    "rating": 1073,
-   "rank": 176,
+   "rank": 175,
    "pl": "Czad"
+  },
+  "Saint Kitts and Nevis": {
+   "code": "KN",
+   "rating": 1069,
+   "rank": 176,
+   "pl": "Saint Kitts i Nevis"
+  },
+  "Andorra": {
+   "code": "AD",
+   "rating": 1067,
+   "rank": 177,
+   "pl": "Andora"
   },
   "Mauritius": {
    "code": "MU",
    "rating": 1061,
-   "rank": 177,
-   "pl": "Mauritius"
-  },
-  "Saint Kitts and Nevis": {
-   "code": "KN",
-   "rating": 1060,
    "rank": 178,
-   "pl": "Saint Kitts i Nevis"
+   "pl": "Mauritius"
   },
   "Sao Tome and Principe": {
    "code": "ST",
@@ -1079,11 +1079,11 @@
    "rank": 179,
    "pl": "Wyspy Świętego Tomasza i Książęca"
   },
-  "Grenada": {
-   "code": "GD",
-   "rating": 1023,
+  "Gibraltar": {
+   "code": "GI",
+   "rating": 1024,
    "rank": 180,
-   "pl": "Grenada"
+   "pl": "Gibraltar"
   },
   "Saint Martin": {
    "code": "MF",
@@ -1091,29 +1091,29 @@
    "rank": 181,
    "pl": "Saint-Martin"
   },
-  "Gibraltar": {
-   "code": "GI",
-   "rating": 1016,
+  "Aruba": {
+   "code": "AW",
+   "rating": 1017,
    "rank": 182,
-   "pl": "Gibraltar"
+   "pl": "Aruba"
   },
   "Montserrat": {
    "code": "MS",
    "rating": 1016,
-   "rank": 182,
+   "rank": 183,
    "pl": "Montserrat"
-  },
-  "Belize": {
-   "code": "BZ",
-   "rating": 1015,
-   "rank": 184,
-   "pl": "Belize"
   },
   "Myanmar": {
    "code": "MM",
    "rating": 1014,
-   "rank": 185,
+   "rank": 184,
    "pl": "Mjanma"
+  },
+  "Grenada": {
+   "code": "GD",
+   "rating": 1010,
+   "rank": 185,
+   "pl": "Grenada"
   },
   "Somaliland": {
    "code": "JS",
@@ -1121,29 +1121,29 @@
    "rank": 186,
    "pl": "Somaliland"
   },
-  "Barbados": {
-   "code": "BB",
-   "rating": 1003,
-   "rank": 187,
-   "pl": "Barbados"
-  },
-  "Aruba": {
-   "code": "AW",
-   "rating": 1001,
-   "rank": 188,
-   "pl": "Aruba"
-  },
-  "Bermuda": {
-   "code": "BM",
-   "rating": 1000,
-   "rank": 189,
-   "pl": "Bermudy"
-  },
   "Western Sahara": {
    "code": "EH",
    "rating": 996,
-   "rank": 190,
+   "rank": 187,
    "pl": "Sahara Zachodnia"
+  },
+  "Bermuda": {
+   "code": "BM",
+   "rating": 992,
+   "rank": 188,
+   "pl": "Bermudy"
+  },
+  "Belize": {
+   "code": "BZ",
+   "rating": 990,
+   "rank": 189,
+   "pl": "Belize"
+  },
+  "Barbados": {
+   "code": "BB",
+   "rating": 982,
+   "rank": 190,
+   "pl": "Barbados"
   },
   "Somalia": {
    "code": "SO",
@@ -1157,11 +1157,11 @@
    "rank": 192,
    "pl": "Afganistan"
   },
-  "Pakistan": {
-   "code": "PK",
-   "rating": 954,
+  "Sint Maarten": {
+   "code": "SX",
+   "rating": 947,
    "rank": 193,
-   "pl": "Pakistan"
+   "pl": "Sint Maarten"
   },
   "Greenland": {
    "code": "GL",
@@ -1169,59 +1169,59 @@
    "rank": 194,
    "pl": "Grenlandia"
   },
+  "Pakistan": {
+   "code": "PK",
+   "rating": 944,
+   "rank": 195,
+   "pl": "Pakistan"
+  },
   "Djibouti": {
    "code": "DJ",
    "rating": 941,
-   "rank": 195,
+   "rank": 196,
    "pl": "Dżibuti"
   },
-  "Sint Maarten": {
-   "code": "SX",
-   "rating": 922,
-   "rank": 196,
-   "pl": "Sint Maarten"
+  "Antigua and Barbuda": {
+   "code": "AG",
+   "rating": 926,
+   "rank": 197,
+   "pl": "Antigua i Barbuda"
   },
   "Bangladesh": {
    "code": "BD",
    "rating": 919,
-   "rank": 197,
+   "rank": 198,
    "pl": "Bangladesz"
   },
-  "Antigua and Barbuda": {
-   "code": "AG",
-   "rating": 908,
-   "rank": 198,
-   "pl": "Antigua i Barbuda"
+  "Dominica": {
+   "code": "DM",
+   "rating": 906,
+   "rank": 199,
+   "pl": "Dominika"
   },
   "Monaco": {
    "code": "MC",
    "rating": 903,
-   "rank": 199,
+   "rank": 200,
    "pl": "Monako"
   },
   "Nepal": {
    "code": "NP",
    "rating": 893,
-   "rank": 200,
-   "pl": "Nepal"
-  },
-  "Liechtenstein": {
-   "code": "LI",
-   "rating": 882,
    "rank": 201,
-   "pl": "Liechtenstein"
+   "pl": "Nepal"
   },
   "Cambodia": {
    "code": "KH",
    "rating": 882,
-   "rank": 201,
+   "rank": 202,
    "pl": "Kambodża"
   },
-  "Dominica": {
-   "code": "DM",
-   "rating": 875,
+  "Liechtenstein": {
+   "code": "LI",
+   "rating": 880,
    "rank": 203,
-   "pl": "Dominika"
+   "pl": "Liechtenstein"
   },
   "Sri Lanka": {
    "code": "LK",
@@ -1231,7 +1231,7 @@
   },
   "Bonaire": {
    "code": "BQ",
-   "rating": 851,
+   "rating": 842,
    "rank": 205,
    "pl": "Bonaire"
   },
@@ -1253,22 +1253,22 @@
    "rank": 208,
    "pl": "Seszele"
   },
-  "Cayman Islands": {
-   "code": "KY",
-   "rating": 796,
-   "rank": 209,
-   "pl": "Kajmany"
-  },
   "Chagos Islands": {
    "code": "HG",
    "rating": 782,
-   "rank": 210,
+   "rank": 209,
    "pl": "Archipelag Czagos"
+  },
+  "Cayman Islands": {
+   "code": "KY",
+   "rating": 765,
+   "rank": 210,
+   "pl": "Kajmany"
   },
   "Maldives": {
    "code": "MV",
    "rating": 765,
-   "rank": 211,
+   "rank": 210,
    "pl": "Malediwy"
   },
   "Tuvalu": {
@@ -1289,22 +1289,22 @@
    "rank": 214,
    "pl": "Samoa"
   },
-  "Mongolia": {
-   "code": "MN",
-   "rating": 726,
-   "rank": 215,
-   "pl": "Mongolia"
-  },
   "Laos": {
    "code": "LA",
    "rating": 725,
-   "rank": 216,
+   "rank": 215,
    "pl": "Laos"
+  },
+  "Mongolia": {
+   "code": "MN",
+   "rating": 725,
+   "rank": 215,
+   "pl": "Mongolia"
   },
   "Saint Barthelemy": {
    "code": "BL",
    "rating": 725,
-   "rank": 216,
+   "rank": 215,
    "pl": "Saint-Barthélemy"
   },
   "East Timor": {
@@ -1363,7 +1363,7 @@
   },
   "Cook Islands": {
    "code": "CK",
-   "rating": 638,
+   "rating": 647,
    "rank": 227,
    "pl": "Wyspy Cooka"
   },
