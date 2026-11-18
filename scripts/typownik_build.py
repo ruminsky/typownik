@@ -347,7 +347,9 @@ def main():
             cur = teams_kb.get(s, {"name": name, "league": tp.get("league"), "news": []})
             oc = (cur.get("coach") or {})
             nc = tp.get("coach") or {}
-            if nc.get("name") and nc["name"] != oc.get("name"):
+            if nc.get("name") and nc["name"] != oc.get("name") and not (
+                    oc.get("src") in ("news", "manual") and (oc.get("since") or "") >= (nc.get("since") or "")):
+                # a coach from a confirmed headline or a manual fix stays until the API knows a newer appointment
                 cur["coach"] = {**nc, "status": "nowy" if oc.get("name") else "ok", "updatedAt": iso(now())}
             teams_kb[s] = cur
         report["fetch"] = {k: fr[k] for k in ("odds_api", "api_football", "news", "errors", "unmatched")}

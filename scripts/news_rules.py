@@ -10,6 +10,9 @@ Reads ~/.typownik/run/news_candidates.json (headlines collected by typownik_fetc
 A headline counts for a team only when that team is its subject: the first team named in the headline that is not
 the opponent ("przed Atalantą", "z Troyes"). Fixtures and match reports, youth/women's teams, other sports, former
 coaches, interviews and machine translations of English headlines are dropped; near-duplicates are merged.
+Also dropped: content farms, match results without a named injury/red card, national-team items about the country,
+routine call-ups, previews of matches already played, the same player's story twice, and older coach stories once a
+named appointment is confirmed (that headline also sets the new coach's name).
 Private-life gossip (family, relationships, illness of relatives) is never stored.
 Every item keeps its source and link; items older than 21 days are dropped; max 6 news + 6 rumours per club.
 """
@@ -56,13 +59,13 @@ CATEGORIES = [  # only news that change who plays or the situation of a team bef
                             r"wraca po|powr[óo]t po|wraca do treningów|wznowił\w* trening\w*|fit again|back in training|"
                             r"back from injury|returns? from injury|available again|niedostępn\w*|unavailable|a doubt|doubt for|"
                             r"niepewn\w* (występ|start)|hamstring|knee|ankle|surgery|operacj\w*)", re.I)),
-    ("Dyscyplina", re.compile(r"(kartk\w*|czerwon\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bbanned|\bban\b|kara\w* dla)", re.I)),
+    ("Dyscyplina", re.compile(r"(kartk\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bbanned|\bban\b|kara\w* dla)", re.I)),
     ("Trener", re.compile(COACH + r".{0,60}(zwolni\w*|dymisj\w*|sack\w*|presj\w*|pressure|\bnow(y|ego|ym)\b|\bnew\b|appoint\w*|"
                           r"zawiesz\w*|\bban(ned)?\b|\bchor(y|ego|ym|uje|ował\w*|ob\w*)\b|\bill\b|nieobecn\w*|absent|odejdzie|odejść|leave|resign\w*|rezygn\w*|przyszłoś\w*|future|"
                           r"ultimatum|ostatni\w* szans\w*|na wylocie|kandydat\w*|candidate|replace\w*|zastąpi\w*|następc\w*)|"
                           r"(zwolni\w*|dymisj\w*|sack\w*|appointed|nowym trenerem|new (head )?coach|new manager|replace\w*|zastąpi\w*).{0,60}" + COACH, re.I)),
     ("Sytuacja w klubie", re.compile(r"(konflikt\w*|bunt\w*|w szatni|dressing room|zaległ\w* (pensj|wypłat)\w*|nie otrzymal\w* (pensji|wypłat)|"
-                                     r"unpaid wages|protest\w* kibic\w*|kibic\w* protest\w*|fans? protest\w*|boycott|bojkot\w*|gwizd\w*|"
+                                     r"unpaid wages|protest\w* kibic\w*|kibic\w* protest\w*|fans? protest\w*|boycott|bojkot\w*|gwizd(y|ami|ach|ów)\b|wygwizd\w*|"
                                      r"odsunięt\w*|odstawion\w*|frozen out|transfer request|chce odejść|wants out|"
                                      r"refus\w* to (train|play)|odmawia\w* (gry|trening)|strajk\w*|ujemn\w* punkt\w*|"
                                      r"points? deduct\w*|odjęci\w* punktów|zakaz transferow\w*|transfer ban|administration|"
@@ -73,7 +76,7 @@ CATEGORIES = [  # only news that change who plays or the situation of a team bef
 ]
 CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wygląda|niesamowit\w*|szok\w*|wow|"
                        r"you won.t believe|watch|quiz|ranking|top \d+)\b|zarobk\w*|pensj\w*|ile zarabia|mógł trafić|"
-                       r"nie uwierzysz|kulisy|wspomina|wspomnie\w*|jak dziś|lat temu|throwback|on this day|"
+                       r"nie uwierzysz|kulisy|wspomina|wspomnie\w*|jak dziś|lat temu|po latach|przed laty|sprzed lat|\b\d{3,} dni\b|throwback|on this day|"
                        r"fryzur\w*|tatuaż\w*|samoch[oó]d|willa|dom za|wakacj\w*|instagram|tiktok|museum|muzeum|team photo|zdjęci\w*|"
                        r"visit\w*|odwiedzi\w*|charity|charytat\w*|students|anniversary|rocznic\w*|"
                        r"\boto (następc\w*|on|ona|powód|powody|szczegóły|kulisy|lista|nazwisk\w*)\b|\bto on\b|\bto ona\b|"
@@ -82,7 +85,7 @@ CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wy
 
 LIVE = re.compile(r"(live|na żywo|aktualizacj\w* na żywo|minute by minute|as it happened|relacja)", re.I)
 SEO = re.compile(r"(kto wygrał|wynik meczu|wynik, kto|\d{1,2}\.\d{1,2}\.\d{4}|kim jest|who is|przewidywan\w*|zapowied\w*|"
-                 r"preview|gdzie obejrze\w*|\btypy\b|prediction\w*|predicted|przewidywany skład|player ratings|oceny)", re.I)
+                 r"preview|gdzie obejrze\w*|tak (ma|może|mógłby) wyglądać|\btypy\b|prediction\w*|predicted|przewidywany skład|player ratings|oceny)", re.I)
 
 
 def LOWVALUE(t):
@@ -91,11 +94,12 @@ def LOWVALUE(t):
     return caps > 0.6 and len(letters) > 15 or bool(LIVE.search(t)) or bool(SEO.search(t))
 
 
-YOUTH = re.compile(r"(\bU-?(1[5-9]|2[0-3])\b|junior\w*|młodzieżow\w*|rezerw\w*|kobiet\w*|piłkark\w*|żeńsk\w*|"
+YOUTH = re.compile(r"(\bU-?(1[5-9]|2[0-3])\b|\bII\b|talent\w*|junior\w*|młodzieżow\w*|rezerw\w*|kobiet\w*|piłkark\w*|żeńsk\w*|"
                    r"\bwomen\b|\bWSL\b|femen\w*)", re.I)
 OTHER_SPORT = re.compile(r"(krykiet\w*|cricket|\bTests?\b|rugby|siatk\w*|koszyk\w*|hokej\w*|\bNBA\b|\bNFL\b|tenis\w*|"
                          r"żużl\w*|piłk\w* ręczn\w*|szczypiorn\w*|futsal|e-?sport\w*|\bF1\b|formuł\w* 1|boks\w*|\bMMA\b|"
-                         r"\bUFC\b|golf\w*|fina(ł|le)\w* MŚ)", re.I)
+                         r"\bUFC\b|golf\w*|fina(ł|le)\w* MŚ|amp ?futbol\w*|ampfutbol\w*|amputowan\w*|United Cup|plażow\w*|beach soccer|"
+                         r"padel\w*|lekkoatlet\w*|pływa\w*|kolarz\w*|kolarstw\w*|skoczk\w*|narciar\w*|darts?\b)", re.I)
 # match reports: a score, VAR / referee talk or "two goals and a red card" says nothing about the next match
 REPORT = re.compile(r"(\b\d{1,2}\s?:\s?\d{1,2}\b|\b\d{1,2}-\d{1,2}\b|\bVAR\b|sędzi\w*|skrót\w*|highlights|"
                     r"\b(dwa|trzy|cztery|pięć) gol\w*|gol\w* i czerwon\w*)", re.I)
@@ -103,8 +107,9 @@ REPORT = re.compile(r"(\b\d{1,2}\s?:\s?\d{1,2}\b|\b\d{1,2}-\d{1,2}\b|\bVAR\b|sę
 FORMER = re.compile(r"(\bby[łl]\w* (trener|szkoleniow|menedżer|piłkarz|zawodnik|gracz|bramkarz|napastnik|obrońc|pomocnik|"
                     r"kapitan|prezes|selekcjoner)\w*|\bex-|\bformer\b|legend\w*|emeryt\w*|zakończ\w* karier\w*|"
                     r"wspomin\w*|wywiad\w*|podcast\w*|obudził\w*)", re.I)
+INTERVIEW = re.compile(r"^[A-ZĄĆĘŁŃÓŚŹŻ]\w+ [A-ZĄĆĘŁŃÓŚŹŻ][\w’'-]+ o \w+")  # "Niko Kovač o presji, śnie i zdrowiu"
 # a team right after these words is the opponent, not the subject ("przed Atalantą", "nie zagra z Troyes")
-OPPONENT_WORDS = {"przed", "przeciwko", "z", "ze", "vs", "v", "versus", "against", "kontra", "nad", "nie",
+OPPONENT_WORDS = {"przed", "przeciwko", "z", "ze", "vs", "v", "versus", "against", "kontra", "nad", "nie", "na",
                   "rywal", "rywala", "rywalem", "rywalami"}
 _KNOWN = []
 
@@ -169,6 +174,134 @@ def team_tokens(title, teams):
 
 
 PERSONAL_CATS = ("Kontuzja", "Dyscyplina", "Kadra")
+# content farms and machine-translated aggregators, betting blogs: their "news" is often wrong or invented
+BAD_SOURCE = re.compile(r"(sporten|karlobag|etoto|[\u0400-\u04FF])", re.I)
+# a match result: only an injury or a named red card from it matters for the next match
+RESULT = re.compile(r"(?i:pokona\w*|ograł\w*|rozbił\w*|rozgromi\w*|zdemolowa\w*|zremisowa\w*|uległ\w*|przegra\w*|wygra(ł|li|ła|ły)\w*|"
+                    r"zwycięży\w*|odczarowa\w*|statystów|na pół gwizdka|pierwsz\w* (porażk|zwycięstw|wygran)\w*|"
+                    r"o wyniku|dublet\w*|w doliczonym czasie|hat-?trick\w*|zwycięstw\w* (nad|z)\b)|[Zz]dobył\w* [A-ZĄĆĘŁŃÓŚŹŻ]")
+DISC_WORD = re.compile(r"(kartk\w*|zawiesz\w*|dyskwalifik\w*|red card|suspen\w*|\bban)", re.I)
+# a national team headline must be about the team, not the country ("błyszczał w Portugalii", "Niemcy ujawnili")
+NATION_CTX = re.compile(r"(reprezent\w*|kadr\w*|selekcjoner\w*|zgrupowan\w*|biało-?czerwon\w*|lig\w* narodów|eliminacj\w*|"
+                        r"mundial\w*|\bMŚ\b|\bEuro\b|mistrzost\w* świata)", re.I)
+CALLUP = re.compile(r"(powołan\w*|powołani\b|call-?up)", re.I)
+CALLUP_KEEP = re.compile(r"(nie (został\w* )?powoła\w*|bez powoła\w*|pominięt\w*|poza kadrą|debiut\w*|zaskocz\w*|niespodzi\w*|"
+                         r"problem\w*|osłab\w*|wypada|zamiast|w miejsce|awaryjn\w*|dowoła\w*|odesłan\w*|kontuzj\w*)", re.I)
+WANTS_OUT = re.compile(r"(chce odejść|wants out|transfer request)", re.I)
+MATCHDAY_SQUAD = re.compile(r"(na mecz|skład\w*|na ławce)", re.I)
+# "Mauricio Pochettino nowym trenerem", "nowym trenerem został Thomas Frank", "Trener X objął Y"
+_NM = r"([A-ZĄĆĘŁŃÓŚŹŻ][\w’'-]+(?: [A-ZĄĆĘŁŃÓŚŹŻ][\w’'-]+){1,2})"
+NEW_COACH_NAME = [re.compile(_NM + r" (?:został\w* |zostanie |jest |będzie )?(?:oficjalnie )?now(?:ym|y) (?:trener|szkoleniow|menedżer)"),
+                  re.compile(r"now(?:ym|y) (?:trener|szkoleniow|menedżer)\w* (?:\S+ ){0,3}?(?:został|zostaje|jest) " + _NM),
+                  re.compile(_NM + r" (?:objął|obejmie|przejął)\b")]
+_NATIONS = set()
+_PLAYED = {}
+
+
+def played():
+    """Finished matches per team: [(kickoff, opponent)] – a preview of a match already played is stale."""
+    if not _PLAYED:
+        try:
+            for m in json.load(open(os.path.join(H, "data", "matches.json"), encoding="utf-8")).get("matches", []):
+                if m.get("status") == "finished" or m.get("result"):
+                    for a, b in (("home", "away"), ("away", "home")):
+                        _PLAYED.setdefault(m[a]["name"], []).append((m.get("kickoff") or "", m[b]["name"]))
+        except (OSError, ValueError, KeyError):
+            pass
+        _PLAYED.setdefault("", [])
+    return _PLAYED
+
+
+def about_played_match(n, name):
+    t, d = tf.norm(n.get("text") or ""), n.get("date") or ""
+    for ko, opp in played().get(name, []):
+        if d and d <= ko and any(rx.search(t) for rx in tf.news_rx().get(opp) or [tf._stem_rx(opp)]):
+            return True
+    return False
+
+
+def nations():
+    """Teams that play in national-team competitions (from the fixtures)."""
+    if not _NATIONS:
+        try:
+            for m in json.load(open(os.path.join(H, "data", "matches.json"), encoding="utf-8")).get("matches", []):
+                if m.get("league") in tf.NATION_LEAGUES:
+                    _NATIONS.update((m["home"]["name"], m["away"]["name"]))
+        except (OSError, ValueError, KeyError):
+            pass
+    return _NATIONS
+
+
+def sentences(title):
+    return [x for x in re.split(r"(?<=[.!?])\s+", title) if x]
+
+
+def new_coach_name(title, teams):
+    """The name of the newly appointed coach in a confirmed headline, or None."""
+    tt = team_tokens(title, teams)
+    for rx in NEW_COACH_NAME:
+        m = rx.search(title)
+        if m:
+            words = m.group(1).split()
+            while words and (words[0].lower() in COMMON or set(tf.norm(words[0]).split()) <= tt):
+                words.pop(0)  # "Oficjalnie", "Trener", a club name in front
+            if len(words) >= 2 and not set(tf.norm(" ".join(words)).split()) <= tt:
+                return " ".join(words)
+    return None
+
+
+def persons(title, teams, skip=()):
+    """Stems of the people a headline names (for "the same story twice")."""
+    tt, out = team_tokens(title, teams), set()
+    words = re.findall(r"\S+", title)
+    for i, raw in enumerate(words):
+        w = raw.strip("\"'„”«»()[],:;!?.-–—")
+        nw = tf.norm(w)
+        if not CAP.match(w) or not nw or set(nw.split()) <= tt or w.lower() in COMMON:
+            continue
+        if (i == 0 or words[i - 1][-1:] in ".!?:") and not any(nw.startswith(st) for st in people()):
+            continue
+        st = nw[:5]
+        if not any(st.startswith(x[:5]) for x in skip):
+            out.add(st)
+    return out
+
+
+def reject(n, kb, teams, cat):
+    """Why a stored automatic item does not belong on the team card (None = keep)."""
+    txt, src, name = n.get("text") or "", n.get("source") or "", kb.get("name")
+    try:
+        d = dt.datetime.fromisoformat((n.get("date") or "").replace("Z", "+00:00"))
+        age = (now() - (d if d.tzinfo else d.replace(tzinfo=dt.timezone.utc))).days
+    except ValueError:
+        age = 0
+    if BAD_SOURCE.search(src) or OTHER_SPORT.search(src):
+        return "źródło"
+    if cat != "Trener" and about_played_match(n, name):
+        return "mecz już rozegrany"
+    if name in nations() and not NATION_CTX.search(txt) and not any(rx.match(tf.norm(txt)) for rx in tf.news_rx().get(name) or [tf._stem_rx(name)]):
+        return "kraj, nie reprezentacja"
+    if RESULT.search(txt) and cat not in ("Kontuzja", "Dyscyplina", "Trener"):
+        return "relacja z meczu"
+    if cat == "Dyscyplina" and RESULT.search(txt) and not any(DISC_WORD.search(x) and named(x, teams) for x in sentences(txt)):
+        return "kartka bez nazwiska"  # "Hiszpania zdobyła Pragę. Czerwona kartka po przerwie" – whose card?
+    if cat == "Kontuzja" and not persons(txt, teams, skip=[coach_surname(kb) or "-"]):
+        return "kontuzja bez nazwiska"
+    if cat == "Kadra":
+        if CALLUP.search(txt) and not CALLUP_KEEP.search(txt):
+            return "zwykłe powołanie"
+        if name not in nations() and (re.search(r"reprezent\w*", txt, re.I) or any(t in txt for t in nations())) \
+                and not CALLUP_KEEP.search(txt):
+            return "reprezentacja, nie klub"
+        if age > (2 if MATCHDAY_SQUAD.search(txt) else 7):
+            return "nieaktualny skład"
+    if cat == "Trener" and status_of(txt, False) == "nowy" and not new_coach_name(txt, teams):
+        return "nowy trener bez nazwiska"
+    if cat == "Dyscyplina" and age > 10:
+        return "stara kartka"
+    if cat == "Sytuacja w klubie" and WANTS_OUT.search(txt) and not named(txt, teams):
+        return "anonimowy transfer"
+    return None
 
 
 def clean(title):
@@ -178,7 +311,7 @@ def clean(title):
 
 def junk(title):
     return bool(PRIVATE.search(title) or CLICKBAIT.search(title) or LOWVALUE(title) or YOUTH.search(title)
-                or OTHER_SPORT.search(title) or REPORT.search(title) or FORMER.search(title)
+                or OTHER_SPORT.search(title) or REPORT.search(title) or FORMER.search(title) or INTERVIEW.search(title)
                 or len(ENGLISH_LEFT.findall(title)) >= 2)
 
 
@@ -204,7 +337,7 @@ def translated_texts():
 
 
 COACH_EVENT = re.compile(r"(zwolni\w*|dymisj\w*|koniec|następc\w*|zastąp\w*|porozumieni\w*|zatrudni\w*|presj\w*|na wylocie|"
-                         r"ultimatum|posad\w*|gwizd\w*|mają dość|rezygn\w*|zawiesz\w*)", re.I)
+                         r"ultimatum|posad\w*|gwizd(y|ami|ach|ów)\b|mają dość|rezygn\w*|zawiesz\w*)", re.I)
 
 
 def coach_surname(kb):
@@ -286,7 +419,8 @@ def named(title, teams):
 
 def status_of(title, rumour):
     """Coach status a headline states: a rumoured sacking is only pressure, a rumoured new coach changes nothing yet."""
-    st = next((name for name, rx in RULES if rx.search(title)), None)
+    hits = [name for name, rx in RULES if rx.search(title)]
+    st = "nowy" if "nowy" in hits and "zwolniony" in hits else next(iter(hits), None)  # "X nowym trenerem po zwolnieniu Y"
     if st == "zwolniony" and rumour:
         return "pod presją"
     return None if st == "nowy" and rumour else st
@@ -324,12 +458,15 @@ def main():
         coach_name = ((kb.get("coach") or {}).get("name") or "")
         coach_hit = re.search(COACH, title, re.I) or (coach_name and tf.norm(coach_name.split()[-1]) in tnorm)
         status = status_of(title, rumour) if coach_hit else None
+        if status == "nowy" and not new_coach_name(title, teams):
+            status = None  # "Tottenham ma nowego trenera" without a name is often an old article with a fresh date
         if status:
             co = kb.get("coach") or {}
-            manual = co.get("status") not in (None, "ok") and not co.get("auto") and co.get("updatedAt", "") > cut
-            if co.get("status") != status and not manual:
+            manual = co.get("status") not in (None, "ok") and not co.get("auto") and co.get("updatedAt", "") > (c.get("published") or stamp)
+            if co.get("status") != status and not manual and not BAD_SOURCE.search(c.get("source") or "") \
+                    and not OTHER_SPORT.search(c.get("source") or ""):
                 kb["coach"] = {**co, "status": status, "note": text, "until": until, "source": c.get("source"),
-                               "auto": True, "updatedAt": stamp}
+                               "auto": True, "updatedAt": stamp, "noteDate": c.get("published") or stamp}
                 changes.append(f"{team}: trener → {status}")
         imp = impact_of(title + " " + summ[:160])
         if rumour and not status and TRANSFER.search(title):
@@ -361,14 +498,22 @@ def main():
         co = kb.get("coach") or {}
         note = co.get("note") or ""
         if co.get("auto") and note and (note in mt or junk(note) or subject_of(note, teams) != kb.get("name")
-                                         or status_of(note, bool(RUMOUR.search(note))) != co.get("status")):  # rules changed
+                                         or status_of(note, bool(RUMOUR.search(note))) != co.get("status")
+                                         or (co.get("status") == "nowy" and not new_coach_name(note, teams))):  # rules changed
             kb["coach"] = {**{k: v for k, v in co.items() if k not in ("note", "until", "auto", "source")}, "status": "ok"}
             dropped += 1  # the automatic coach status came from a headline that no longer passes the rules
-        kept_texts = []
+        if kb.get("name") in nations() and kb.get("league") not in tf.NATION_LEAGUES:
+            kb["league"] = "nl"  # was taken from the feed the first headline came from (e.g. a Bayern fan site)
+        for n in list(kb.get("news") or []):  # a headline that reads as gossip under today's rules is gossip
+            if n.get("auto") and RUMOUR.search(n.get("text") or ""):
+                kb["news"].remove(n)
+                kb.setdefault("rumours", []).append(n)
+        kept_texts, seen, appointed = [], [], None
+        coach_texts = [n.get("text") or "" for k in ("news", "rumours") for n in kb.get(k) or []]
         for key in ("news", "rumours"):
             if key in kb:  # older automatic items get the same filters and a category
                 fresh = []
-                for n in kb[key]:
+                for n in sorted(kb[key], key=lambda n: n.get("date") or "", reverse=True):  # newest version of a story wins
                     if n.get("auto"):
                         txt = n["text"] = clean(n.get("text") or "")
                         if (junk(txt) or txt in mt or n.get("lang") == "en" or subject_of(txt, teams) != kb.get("name")
@@ -377,14 +522,41 @@ def main():
                             continue
                         n["cat"] = "Trener" if n.get("cat") == "Trener" and (kb.get("coach") or {}).get("note") == n.get("text") \
                             else category(n.get("text"), kb)  # stricter rules apply to stored items too
-                        if not n["cat"] or (n["cat"] in PERSONAL_CATS and not named(txt, teams)):
+                        if not n["cat"] or (n["cat"] in PERSONAL_CATS and not named(txt, teams)) or reject(n, kb, teams, n["cat"]):
                             dropped += 1
                             continue
+                        who = persons(txt, teams, skip=[coach_surname(kb) or "-"]) if n["cat"] in PERSONAL_CATS else set()
+                        if any(c == n["cat"] and who & w for c, w in seen):
+                            dropped += 1
+                            continue  # the same player's injury / call-up again
+                        if n["cat"] == "Trener":
+                            st = status_of(txt, key == "rumours")
+                            if appointed:
+                                dropped += 1
+                                continue  # an older coach story (candidates, talks, the sacking) after the appointment is known
+                            if st == "nowy" and key == "news":
+                                appointed = n
+                        seen.append((n["cat"], who))
                     kept_texts.append(n.get("text") or "")
                     fresh.append(n)
                 kb[key] = fresh
                 kb[key] = sorted([n for n in kb[key] if (n.get("date") or stamp) >= cut],
                                  key=lambda n: n.get("date") or "", reverse=True)[:6]
+        if appointed:  # the club has a confirmed new coach: say who it is, or that the old name is out of date
+            co = kb.get("coach") or {}
+            nm = new_coach_name(appointed["text"], teams)
+            day = (appointed.get("date") or stamp)[:10]
+            renamed = False
+            if nm and tf.norm(nm).split()[-1] != tf.norm(co.get("name") or "-").split()[-1]:
+                kb["coach"], renamed = {**co, "name": nm, "since": day, "src": "news", "prev": co.get("name")}, True
+            elif not nm and co.get("src") != "news" and coach_surname(kb) and any(
+                    re.search(re.escape(coach_surname(kb)[:-1]) + r"\w*", tf.norm(x)) and re.search(r"(zwolni|zastąpi|odejś|odchodz|dymisj|rozsta)", x, re.I)
+                    for x in coach_texts):
+                kb["coach"], renamed = {**co, "name": None, "since": day, "src": "news", "prev": co.get("name")}, True
+            co = kb["coach"] = kb.get("coach") or {}
+            if renamed or co.get("status") != "nowy" and ( (co.get("noteDate") or co.get("updatedAt") or "") < (appointed.get("date") or "")):
+                kb["coach"] = {**co, "status": "nowy", "note": appointed["text"], "until": until, "source": appointed.get("source"),
+                               "auto": True, "updatedAt": stamp, "noteDate": appointed.get("date")}
         co = kb.get("coach") or {}
         if co.get("auto") and co.get("until") and co["until"] < now().strftime("%Y-%m-%d"):
             kb["coach"] = {**{k: v for k, v in co.items() if k not in ("note", "until", "auto")}, "status": "ok"}
