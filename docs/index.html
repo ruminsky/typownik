@@ -404,14 +404,17 @@ function predict(m){
     if(i===0&&j===0)t=1-lh*la*r; else if(i===0&&j===1)t=1+lh*r; else if(i===1&&j===0)t=1+la*r; else if(i===1&&j===1)t=1-r;
     const p=pois(i,lh)*pois(j,la)*t; M[i][j]=p; tot+=p; }}
   let ph=0,pd=0,pa=0,o15=0,o25=0,o35=0,btts=0; const scores=[];
-  for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){ const p=M[i][j]/tot; M[i][j]=p; if(i>j)ph+=p; else if(i===j)pd+=p; else pa+=p;
-    if(i+j>1)o15+=p; if(i+j>2)o25+=p; if(i+j>3)o35+=p; if(i>0&&j>0)btts+=p; scores.push({s:i+":"+j,p}); }
-  scores.sort((a,b)=>b.p-a.p);
+  for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){ const p=M[i][j]/tot; M[i][j]=p; if(i>j)ph+=p; else if(i===j)pd+=p; else pa+=p; }
   const model={h:ph,d:pd,a:pa}; let market=null, fin={...model};
   const uo=typeof getOdds==="function"?getOdds(m.id):null;
   const od=(m.odds&&m.odds.h&&m.odds.d&&m.odds.a)?m.odds:(uo&&+uo.h>1&&+uo.d>1&&+uo.a>1?{h:+uo.h,d:+uo.d,a:+uo.a,user:true}:null);
   if(od){ const ih=1/od.h,id=1/od.d,ia=1/od.a,s=ih+id+ia; market={h:ih/s,d:id/s,a:ia/s,margin:s-1,user:!!od.user};
     const w=(LG.cup||LG.nation)?Math.max(settings.market,0.7):settings.market; fin={h:(1-w)*ph+w*market.h,d:(1-w)*pd+w*market.d,a:(1-w)*pa+w*market.a}; }
+  // exact scores, goals and BTTS follow the final 1/X/2 (model + bookmaker); before, they came from the model alone and could favour the other team
+  const sc={h:fin.h/ph,d:fin.d/pd,a:fin.a/pa};
+  for(let i=0;i<=N;i++)for(let j=0;j<=N;j++){ const p=M[i][j]*=sc[i>j?"h":i<j?"a":"d"];
+    if(i+j>1)o15+=p; if(i+j>2)o25+=p; if(i+j>3)o35+=p; if(i>0&&j>0)btts+=p; scores.push({s:i+":"+j,p}); }
+  scores.sort((a,b)=>b.p-a.p);
   const dq=[
     useElo?["Ranking siły",true]:["Tabela sezonu",!!(m.home.overall?.p&&m.away.overall?.p)],
     ["Dom / wyjazd",!!(m.home.venue?.p&&m.away.venue?.p)],
@@ -581,6 +584,7 @@ function whyPanel(m,p,full){
   const fo=k=>dec(1/(p.model[k]*taxF()),2);
   return `<div class="whyin">
     <div class="f2">Najbardziej prawdopodobny wynik <b>${p.scores[0].s}</b> (${pct(p.scores[0].p)}) · ponad 2,5 gola <b>${pct(p.o25)}</b> · obie strzelą <b>${pct(p.btts)}</b></div>
+    ${scoreNote(m,p)?`<div class="f2">${esc(scoreNote(m,p))}</div>`:""}
     <div><h4>${crest(F.t.name,18)}<span>${clear?"Dlaczego "+esc(F.t.name)+" wygra":"Dlaczego "+esc(F.t.name)+" ma lekką przewagę"}</span><span class="pc num">${pct(fP)}</span></h4>
       <ul>${a.length?a.map(x=>li(x,"pro","✓")).join(""):`<li class="pro"><i>✓</i><span>Brak wyraźnych atutów, przewaga wynika z drobnych różnic w statystykach.</span></li>`}</ul></div>
     <div><h4>${crest(U.t.name,18)}<span>${clear?"Dlaczego "+esc(U.t.name)+" przegra":"Dlaczego "+esc(U.t.name)+" ma mniejsze szanse"}</span><span class="pc num">${pct(uP)}</span></h4>
@@ -609,7 +613,7 @@ const pickHtml=(p,tp)=>`<div class="mc-pick"><div class="t"><small>Typ ${esc(tp.
 // coin flip: no single result above 55% – a bad leg for an accumulator
 const riskTop=p=>{ const t=Math.max(p.fin.h,p.fin.d,p.fin.a); return t<0.55?t:null; };
 const riskHtml=p=>{ const t=riskTop(p); if(t==null) return "";
-  return `<div class="risk">⚠ Ryzykowny na kupon: najbardziej prawdopodobny wynik ma tylko ${pct(t)}, to prawie rzut monetą. Na AKO lepiej pomiń ten mecz.</div>`; };
+  return `<div class="risk">⚠ Ryzykowny na kupon: nawet typ „${esc(p.main.text)}” ma tylko ${pct(t)}, to prawie rzut monetą. Na AKO lepiej pomiń ten mecz.</div>`; };
 function matchCard(m,p){ const tp=tipOf(p), v=bestValue(m,p);
   return `<article class="mcard">
   <button class="cmain" data-id="${esc(m.id)}" aria-label="${esc(m.home.name)} – ${esc(m.away.name)}: pełna analiza">
@@ -723,6 +727,13 @@ function teamBlock(t,label){
     <div class="note"><b>Plotki (niepotwierdzone)</b></div>${list(t.rumours,x=>`<div>• ${x.cat?`<b>${esc(x.cat)}</b> · `:""}${esc(x.text)} <span class="note">(${esc(x.source||"")})</span></div>`,"brak")}
     ${t.transfersNote?`<div class="note"><b>Transfery:</b> ${esc(t.transfersNote)}</div>`:""}
   </div>`; }
+// When the single most likely score (often 1:1) belongs to a different outcome than the tip, say why both are right.
+function scoreNote(m,p){ const oc=x=>{const [i,j]=x.split(":").map(Number); return i>j?"h":i<j?"a":"d"};
+  const top=p.scores[0], k=oc(top.s), t=p.main.cls; if(k===t) return "";
+  const lab=x=>x==="d"?"remisy":`wyniki, w których wygrywa ${x==="h"?m.home.name:m.away.name}`;
+  const ex=x=>p.scores.filter(s=>oc(s.s)===x).slice(0,3).map(s=>s.s).join(", ")+"…";
+  const best=p.scores.find(s=>oc(s.s)===t);
+  return `${top.s} to najczęstszy pojedynczy wynik (${pct(top.p)}). Typ liczy jednak wszystkie wyniki razem: ${lab(t)} (${ex(t)})${t==="d"?"":","} mają łącznie ${pct(p.fin[t])}, a ${lab(k)} (${ex(k)}) ${pct(p.fin[k])}. Jeśli wejdzie typ ${p.main.code}, najbardziej prawdopodobny wynik to ${best.s} (${pct(best.p)}).`; }
 function renderDetail(id){
   const m=matches.find(x=>x.id===id);
   if(!m){ $("#view").innerHTML=`<button class="back" id="back">‹ Typy</button>`+stateBox(); $("#back").onclick=()=>{location.hash=""}; return; }
@@ -1198,7 +1209,7 @@ async function loadFiles(){
   }catch(e){ return false; }
 }
 /* new version and fresh data when the home-screen app comes back to the front (iPhone keeps the old page in memory) */
-const BUILD="20261114110325"; // replaced with the publish time; version.txt next to the page holds the newest one
+const BUILD="20261118060021"; // replaced with the publish time; version.txt next to the page holds the newest one
 let lastLoad=Date.now();
 async function checkVersion(){
   if(BUILD.startsWith("__")) return;
