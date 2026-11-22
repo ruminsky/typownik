@@ -37,7 +37,8 @@ PRIVATE = re.compile(r"(żon\w*|mąż|męża|rozw\w*|dziewczyn\w*|partnerk\w*|ś
                      r"pogrzeb|zmarł\w*|śmier\w*|wife|girlfriend|divorce|wedding|funeral|died|son |daughter)", re.I)
 COACH = r"(trener\w*|szkoleniow\w*|menedżer\w*|manager|head coach|coach|boss)"
 RULES = [
-    ("zwolniony", re.compile(r"(zwolni\w*|dymisj\w*|sacked|fired|parted company|rozsta\w* z trener\w*)", re.I)),
+    ("zwolniony", re.compile(r"(zwolni\w*|dymisj\w*|zrezygnował\w*|rezygnuje z (funkcji|posady|pracy)|sacked|fired|resign\w*|"
+                              r"parted company|rozsta\w* z trener\w*)", re.I)),
     ("pod presją", re.compile(r"(sack|under pressure|pod presją|traci posad\w*|może stracić (posad|prac|stanowisk)\w*|na wylocie|ostatnia szansa|"
                               r"zagrożon\w*|future in doubt|dni \w+ policzone|zwolnienie\?)", re.I)),
     ("nowy", re.compile(r"(nowym trener\w*|nowy trener|nowego trener\w*|new (head )?coach|new manager|appointed|zatrudni\w*|"
@@ -80,7 +81,9 @@ CLICKBAIT = re.compile(r"(^(gotowi|zobacz|oto|to on|to ona|wiemy|sprawdź|tak wy
                        r"fryzur\w*|tatuaż\w*|samoch[oó]d|willa|dom za|wakacj\w*|instagram|tiktok|museum|muzeum|team photo|zdjęci\w*|"
                        r"visit\w*|odwiedzi\w*|charity|charytat\w*|students|anniversary|rocznic\w*|"
                        r"\boto (następc\w*|on|ona|powód|powody|szczegóły|kulisy|lista|nazwisk\w*)\b|\bto on\b|\bto ona\b|"
-                       r"\bznamy (powołania|skład|nazwisk\w*)\b|ujawniono,? kto|wiadomo,? kto|tak zareagował\w*)", re.I)
+                       r"\bznamy (powołania|skład|nazwisk\w*)\b|ujawniono,? kto|wiadomo,? kto|tak zareagował\w*|"
+                       r"zapis\w* w kontrakcie|klauzul\w*|na wypadek kontuzji|jak podejdzie do meczu|ujawnia,? jak|"
+                       r"konferencj\w* prasow\w*)", re.I)
 
 
 LIVE = re.compile(r"(live|na żywo|aktualizacj\w* na żywo|minute by minute|as it happened|relacja)", re.I)
@@ -175,7 +178,7 @@ def team_tokens(title, teams):
 
 PERSONAL_CATS = ("Kontuzja", "Dyscyplina", "Kadra")
 # content farms and machine-translated aggregators, betting blogs: their "news" is often wrong or invented
-BAD_SOURCE = re.compile(r"(sporten|karlobag|etoto|[\u0400-\u04FF])", re.I)
+BAD_SOURCE = re.compile(r"(sporten|karlobag|etoto|decathlon|[\u0400-\u04FF])", re.I)
 # a match result: only an injury or a named red card from it matters for the next match
 RESULT = re.compile(r"(?i:pokona\w*|ograł\w*|rozbił\w*|rozgromi\w*|zdemolowa\w*|zremisowa\w*|uległ\w*|przegra\w*|wygra(ł|li|ła|ły)\w*|"
                     r"zwycięży\w*|odczarowa\w*|statystów|na pół gwizdka|pierwsz\w* (porażk|zwycięstw|wygran)\w*|"
@@ -194,7 +197,58 @@ _NM = r"([A-ZĄĆĘŁŃÓŚŹŻ][\w’'-]+(?: [A-ZĄĆĘŁŃÓŚŹŻ][\w’'-]+)
 NEW_COACH_NAME = [re.compile(_NM + r" (?:został\w* |zostanie |jest |będzie )?(?:oficjalnie )?now(?:ym|y) (?:trener|szkoleniow|menedżer)"),
                   re.compile(r"now(?:ym|y) (?:trener|szkoleniow|menedżer)\w* (?:\S+ ){0,3}?(?:został|zostaje|jest) " + _NM),
                   re.compile(_NM + r" (?:objął|obejmie|przejął)\b")]
+LONG_INJURY = re.compile(r"(miesi\w*|sezon\w*|więzadł\w*|operacj\w*|zerwan\w*|złama\w*|\d+ tygodni|kilka tygodni|"
+                         r"długo\w*|ACL|surgery)", re.I)
+ANON = re.compile(r"(gwiazd\w*|gwiazdor\w*|piłkarz\w*|zawodnik\w*|lider\w*)", re.I)
+# "po meczu z Romą", "przed meczem z Barceloną": the article must sit next to such a match, otherwise it is an
+# old article that Google News re-dated (seen 2026-11: a September resignation shown as news of 19 November)
+REF_MATCH = re.compile(r"\b(po|przed)\s+(meczu|meczem|spotkaniu|spotkaniem|porażce|remisie|wygranej|zwycięstwie|"
+                       r"klęsce|derbach)\s+(z|ze)\s+(.{3,40})", re.I)
 _NATIONS = set()
+_ALLGAMES = {}
+
+
+def all_games():
+    """(home, away) -> kickoffs from the fixtures and the history file."""
+    if not _ALLGAMES:
+        for fn, key in (("matches.json", "matches"), ("history.json", "matches"), ("results.json", "results")):
+            try:
+                for m in json.load(open(os.path.join(H, "data", fn), encoding="utf-8")).get(key, []):
+                    h = m["home"]["name"] if isinstance(m.get("home"), dict) else m.get("home")
+                    a = m["away"]["name"] if isinstance(m.get("away"), dict) else m.get("away")
+                    ko = m.get("kickoff") or (m.get("date") and m["date"] + "T18:00:00Z")
+                    if h and a and ko:
+                        _ALLGAMES.setdefault(frozenset((h, a)), set()).add(ko)
+            except (OSError, ValueError, KeyError, TypeError):
+                pass
+        _ALLGAMES.setdefault(frozenset(), set())
+    return _ALLGAMES
+
+
+def stale_reference(n, name, teams):
+    """True when the headline refers to a match with a known opponent that is nowhere near the article date."""
+    m = REF_MATCH.search(n.get("text") or "")
+    if not m or not n.get("date"):
+        return False
+    snippet, opp, at = tf.norm(m.group(4)), None, 99
+    for pair in all_games():  # opponents this team really played; "Romą" is Roma here, not only "AS Roma"
+        if name in pair and len(pair) == 2:
+            o = next(iter(pair - {name}))
+            for rx in (tf.news_rx().get(o) or []) + [tf._stem_rx(o)]:
+                hit = rx.search(snippet)
+                if hit and hit.start() < at:
+                    opp, at = o, hit.start()
+    kos = all_games().get(frozenset((name, opp))) if opp else None
+    if not kos or at > 3:
+        return False  # the opponent must follow "po meczu z" directly
+    d = dt.datetime.fromisoformat(n["date"].replace("Z", "+00:00"))
+    for ko in kos:
+        k = dt.datetime.fromisoformat(ko.replace("Z", "+00:00"))
+        if m.group(1).lower() == "po" and d - dt.timedelta(days=6) <= k <= d + dt.timedelta(hours=12):
+            return False
+        if m.group(1).lower() == "przed" and d - dt.timedelta(hours=12) <= k <= d + dt.timedelta(days=10):
+            return False
+    return True
 _PLAYED = {}
 
 
@@ -250,9 +304,28 @@ def new_coach_name(title, teams):
     return None
 
 
+_TEAMWORDS = set()
+
+
+def team_words(teams):
+    if not _TEAMWORDS:
+        for name, _ in known_teams(teams):
+            _TEAMWORDS.update(w[:5] for w in tf.norm(name).split() if len(w) >= 4)
+    return _TEAMWORDS
+
+
+def same_name(a, b):
+    """Polish declension changes the end of a name ("Saka" / "Saki", "Kane" / "Kane'a")."""
+    k = 0
+    while k < min(len(a), len(b)) and a[k] == b[k]:
+        k += 1
+    return k >= max(3, min(len(a), len(b)) - 2)
+
+
 def persons(title, teams, skip=()):
-    """Stems of the people a headline names (for "the same story twice")."""
+    """Normalized names of the people a headline names (for "the same story twice")."""
     tt, out = team_tokens(title, teams), set()
+    skipw = [w for x in skip for w in tf.norm(x or "").split() if len(w) >= 3]
     words = re.findall(r"\S+", title)
     for i, raw in enumerate(words):
         w = raw.strip("\"'„”«»()[],:;!?.-–—")
@@ -261,10 +334,15 @@ def persons(title, teams, skip=()):
             continue
         if (i == 0 or words[i - 1][-1:] in ".!?:") and not any(nw.startswith(st) for st in people()):
             continue
-        st = nw[:5]
-        if not any(st.startswith(x[:5]) for x in skip):
-            out.add(st)
+        first = nw.split()[0]
+        if len(first) < 3 or first[:5] in team_words(teams) or any(same_name(first, x) for x in skipw):
+            continue
+        out.add(first)
     return out
+
+
+def shares_person(a, b):
+    return any(same_name(x, y) for x in a for y in b)
 
 
 def reject(n, kb, teams, cat):
@@ -279,13 +357,21 @@ def reject(n, kb, teams, cat):
         return "źródło"
     if cat != "Trener" and about_played_match(n, name):
         return "mecz już rozegrany"
+    if stale_reference(n, name, teams):
+        return "stary artykuł (mecz, o którym pisze, był dawno)"
+    if name in nations() and age > 10:
+        return "po zgrupowaniu"
+    if name not in nations() and re.search(r"(reprezentac\w*|zgrupowani\w*)", txt, re.I) and age > 7:
+        return "po zgrupowaniu"
+    if cat == "Kontuzja" and age > (45 if LONG_INJURY.search(txt) else 14):
+        return "stara kontuzja"
     if name in nations() and not NATION_CTX.search(txt) and not any(rx.match(tf.norm(txt)) for rx in tf.news_rx().get(name) or [tf._stem_rx(name)]):
         return "kraj, nie reprezentacja"
     if RESULT.search(txt) and cat not in ("Kontuzja", "Dyscyplina", "Trener"):
         return "relacja z meczu"
     if cat == "Dyscyplina" and RESULT.search(txt) and not any(DISC_WORD.search(x) and named(x, teams) for x in sentences(txt)):
         return "kartka bez nazwiska"  # "Hiszpania zdobyła Pragę. Czerwona kartka po przerwie" – whose card?
-    if cat == "Kontuzja" and not persons(txt, teams, skip=[coach_surname(kb) or "-"]):
+    if cat == "Kontuzja" and not persons(txt, teams, skip=[(kb.get("coach") or {}).get("name")]):
         return "kontuzja bez nazwiska"
     if cat == "Kadra":
         if CALLUP.search(txt) and not CALLUP_KEEP.search(txt):
@@ -301,6 +387,8 @@ def reject(n, kb, teams, cat):
         return "stara kartka"
     if cat == "Sytuacja w klubie" and WANTS_OUT.search(txt) and not named(txt, teams):
         return "anonimowy transfer"
+    if cat == "Sytuacja w klubie" and ANON.search(txt) and not persons(txt, teams):
+        return "anonimowa gwiazda"
     return None
 
 
@@ -525,8 +613,8 @@ def main():
                         if not n["cat"] or (n["cat"] in PERSONAL_CATS and not named(txt, teams)) or reject(n, kb, teams, n["cat"]):
                             dropped += 1
                             continue
-                        who = persons(txt, teams, skip=[coach_surname(kb) or "-"]) if n["cat"] in PERSONAL_CATS else set()
-                        if any(c == n["cat"] and who & w for c, w in seen):
+                        who = persons(txt, teams, skip=[(kb.get("coach") or {}).get("name")]) if n["cat"] in PERSONAL_CATS else set()
+                        if any(c == n["cat"] and shares_person(who, w) for c, w in seen):
                             dropped += 1
                             continue  # the same player's injury / call-up again
                         if n["cat"] == "Trener":

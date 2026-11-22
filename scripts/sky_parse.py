@@ -17,6 +17,14 @@ Accuracy policy (real money depends on this data):
     is shown), otherwise they are skipped.  Points that differ from 3W + D
     (points deductions) are kept as shown and reported as "info".
 
+Fallback (added 2026-11-22, when Sky's per-competition calendars started to
+return 404 for everything except the Premier League): the all-competitions
+day page ``/football-scores-fixtures/YYYY-MM-DD`` still works.  Its matches
+carry the same embedded JSON (competition id, teams, scores, status); the date
+comes from the URL and must equal the visible date header.  Finished days are
+cached (stripped JSON) in ~/.typownik/cache so the season fills up over a few
+runs instead of downloading ~100 pages of 3 MB every time.
+
 Page layout (verified 2026-11-09):
   * ``/<slug>-fixtures`` and ``/<slug>-results`` both 301-redirect to
     ``/<slug>-scores-fixtures``: ONE calendar-month view containing results
@@ -51,6 +59,7 @@ import argparse
 import datetime as _dt
 import json
 import logging
+import os
 import re
 import sys
 import time as _time
@@ -505,6 +514,120 @@ def _comp_cfg(comp):
     return COMPS[comp]
 
 
+DAY_CACHE_DIR = os.path.expanduser("~/.typownik/cache")
+FIXTURE_DAYS = 15        # day pages fetched ahead when the competition calendar is down
+NEW_PAST_DAYS = 25       # past day pages downloaded per run (the rest come from the cache)
+_DAY_PAGES = {}
+_DAY_FETCHES = [0]
+_KEEP_STATE = ("competition", "start", "matchState", "status", "statusDescription", "isResult", "isFixture",
+               "isInPlay", "isPostponed", "isCancelled", "isAbandoned", "isSuspended", "customScore")
+
+
+def _day_label(d):
+    n = d.day
+    suf = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+    return "%s %d%s %s" % (_WEEKDAYS[d.weekday()], n, suf, _MONTHS[d.month - 1])
+
+
+def _slim(m):
+    st = m["state"] or {}
+    teams = {side: {"name": ((st.get("teams") or {}).get(side) or {}).get("name"),
+                    "score": ((st.get("teams") or {}).get(side) or {}).get("score")} for side in ("home", "away")}
+    keep = dict((k, st[k]) for k in _KEEP_STATE if k in st)
+    keep["teams"] = teams
+    return dict((k, v) for k, v in m.items() if k not in ("state", "header_date")), keep
+
+
+def _day_page(d, rep):
+    """Matches of our competitions on day ``d`` from the all-competitions day page (or its cache)."""
+    key = d.isoformat()
+    if key in _DAY_PAGES:
+        return _DAY_PAGES[key]
+    final = d < _today_uk() - _dt.timedelta(days=2)  # results of older days no longer change
+    later = d > _today_uk() + _dt.timedelta(days=2)  # fixtures this far ahead rarely move: reuse for 18 h
+    path = os.path.join(DAY_CACHE_DIR, "sky_day_%s.json" % key)
+    fpath = os.path.join(DAY_CACHE_DIR, "sky_fix_%s.json" % key)
+    if later and os.path.exists(fpath):
+        try:
+            c = json.load(open(fpath, encoding="utf-8"))
+            if _dt.datetime.now(UTC) - _dt.datetime.fromisoformat(c["at"]) < _dt.timedelta(hours=18):
+                for m in c["matches"]:
+                    m["header_date"] = d
+                _DAY_PAGES[key] = ("cache:" + key, {"matches": c["matches"]})
+                return _DAY_PAGES[key]
+        except (OSError, ValueError, KeyError, TypeError):
+            pass
+    if final and os.path.exists(path):
+        try:
+            ms = json.load(open(path, encoding="utf-8"))
+            for m in ms:
+                m["header_date"] = d
+            _DAY_PAGES[key] = ("cache:" + key, {"matches": ms})
+            return _DAY_PAGES[key]
+        except (OSError, ValueError):
+            pass
+    if final and _DAY_FETCHES[0] >= NEW_PAST_DAYS:
+        return None
+    url = "%s/football-scores-fixtures/%s" % (BASE_URL, key)
+    text, final_url = fetch_html(url)
+    _DAY_FETCHES[0] += final
+    page = parse_match_page(text, final_url)
+    ids = set(i for c in COMPS.values() for i in c["ids"])
+    want, ms = _day_label(d).lower(), []
+    for m in page["matches"]:
+        if str(((m["state"] or {}).get("competition") or {}).get("id") or "") not in ids:
+            continue
+        if _norm(m.get("header")).lower() != want:
+            rep.add("warning", "skipped: day page match under another date",
+                    "%s v %s header=%r want=%r" % (m.get("home"), m.get("away"), m.get("header"), want), final_url)
+            continue
+        rest, st = _slim(m)
+        ms.append(dict(rest, state=st, header_date=d, header_error=None))
+    if (final or later) and os.path.isdir(DAY_CACHE_DIR):
+        rows = [dict((k, v) for k, v in m.items() if k != "header_date") for m in ms]
+        tmp = (path if final else fpath) + ".tmp"
+        json.dump(rows if final else {"at": _dt.datetime.now(UTC).isoformat(), "matches": rows},
+                  open(tmp, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+        os.replace(tmp, path if final else fpath)
+    _DAY_PAGES[key] = (final_url, {"matches": ms})
+    return _DAY_PAGES[key]
+
+
+def _load_days(comp, kind, offsets, rep):
+    """Same as _load_months, built from day pages: results from the first day of the oldest month asked for
+    until today (newest first, so a download limit only cuts the oldest days), fixtures for FIXTURE_DAYS."""
+    cfg = _comp_cfg(comp)
+    today = _today_uk()
+    try:  # fixture snapshots of days that have passed are useless
+        for f in os.listdir(DAY_CACHE_DIR):
+            if f.startswith("sky_fix_") and f[8:18] < today.isoformat():
+                os.remove(os.path.join(DAY_CACHE_DIR, f))
+    except OSError:
+        pass
+    if kind == "results":
+        y, m = _add_months(today.year, today.month, min(offsets))
+        days = [today - _dt.timedelta(days=i) for i in range((today - _dt.date(y, m, 1)).days + 1)]
+    else:
+        days = [today + _dt.timedelta(days=i) for i in range(FIXTURE_DAYS + 1)]
+    pages, missing = [], 0
+    for d in days:
+        try:
+            got = _day_page(d, rep)
+        except SkyParseError as exc:
+            rep.add("warning", "day page not fetched, its matches are missing", str(exc), d.isoformat())
+            continue
+        if got is None:
+            missing += 1
+            continue
+        url, page = got
+        ms = [m for m in page["matches"]
+              if str(((m["state"] or {}).get("competition") or {}).get("id") or "") in cfg["ids"]]
+        pages.append((url, {"matches": ms, "tiles_in_source": len(ms)}))
+    if missing:
+        rep.add("info", "older days not downloaded yet (limit per run)", "%d days" % missing, cfg["slug"])
+    return pages
+
+
 def _load_months(comp, kind, offsets, rep):
     """Fetch the base page (spec URL) plus neighbouring months.
 
@@ -512,7 +635,13 @@ def _load_months(comp, kind, offsets, rep):
     Returns list of (url, parsed_page)."""
     cfg = _comp_cfg(comp)
     base_url = "%s/%s-%s" % (BASE_URL, cfg["slug"], kind)
-    text, final_url = fetch_html(base_url)
+    try:
+        text, final_url = fetch_html(base_url)
+    except SkyParseError as exc:
+        if "404" not in str(exc):
+            raise
+        rep.add("info", "competition calendar is a 404, using day pages", str(exc), base_url)
+        return _load_days(comp, kind, offsets, rep)
     page = parse_match_page(text, final_url)
     if page["page_month"] is None:
         raise SkyParseError("%s: cannot determine which month the page shows "

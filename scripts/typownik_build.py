@@ -191,6 +191,11 @@ def main():
         tables[c] = [dict(r, team=disp(r["team"])) for r in safe("table", c, report, "tabela")]
         results[c] = [dict(r, home=disp(r["home"]), away=disp(r["away"])) for r in safe("results", c, report, "wyniki")]
     all_results = [r for c in comps for r in results[c]]
+    try:  # season results for news_rules.py: "po meczu z Romą" must sit next to a real match, or the article is old
+        json.dump({"results": [{"date": r["date"], "home": r["home"], "away": r["away"]} for r in all_results]},
+                  open(os.path.join(D, "results.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    except OSError:
+        pass
     team_row, team_dom = {}, {}
     for c in DOMESTIC + ["pl1"]:
         for r in tables[c]:

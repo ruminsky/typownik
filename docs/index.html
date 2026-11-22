@@ -286,10 +286,10 @@ const LEAGUES=[
   {id:"championship",name:"Championship",flag:"Anglia",avg:{home:1.40,away:1.15}},
   {id:"pl1",name:"1. Liga",flag:"Polska",avg:{home:1.45,away:1.10}},
   {id:"ekstraklasa",name:"Ekstraklasa",flag:"Polska",avg:{home:1.50,away:1.15}},
-  {id:"nl",name:"Liga Narodów",flag:"Reprezentacje",avg:{home:1.45,away:1.05},nation:true},
-  {id:"wc",name:"Mistrzostwa Świata",flag:"Reprezentacje",avg:{home:1.40,away:1.10},nation:true},
-  {id:"euro",name:"Mistrzostwa Europy",flag:"Reprezentacje",avg:{home:1.40,away:1.10},nation:true},
-  {id:"friendly",name:"Mecze towarzyskie",flag:"Reprezentacje",avg:{home:1.40,away:1.05},nation:true}
+  {id:"nl",name:"Liga Narodów",flag:"Reprezentacje",avg:{home:1.50,away:1.10},nation:true},
+  {id:"wc",name:"Mistrzostwa Świata",flag:"Reprezentacje",avg:{home:1.50,away:1.10},nation:true},
+  {id:"euro",name:"Mistrzostwa Europy",flag:"Reprezentacje",avg:{home:1.50,away:1.10},nation:true},
+  {id:"friendly",name:"Mecze towarzyskie",flag:"Reprezentacje",avg:{home:1.50,away:1.10},nation:true}
 ];
 const TOP5=["pl","laliga","seriea","bundesliga","ligue1"];
 const LMAP=Object.fromEntries(LEAGUES.map(l=>[l.id,l]));
@@ -303,14 +303,21 @@ let settings=Object.assign({},DEF,store.get("settings",{}));
 let matches=[], rawMatches=[], teamsDB={}, dbState="loading", dayPick=null;
 /* team knowledge base (collection "teams", id = slug of the display name) merged into every match */
 const tslug=s=>String(s).normalize("NFKD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/ß/g,"ss").replace(/ø/g,"o").replace(/[^a-z0-9]+/g," ").trim().replace(/ /g,"-");
-function mergeTeam(t){ const kb=teamsDB[tslug(t.name)]; if(!kb) return t;
-  const cut=Date.now()-21*864e5, seen=new Set((t.news||[]).map(n=>n.text));
-  const kn=(kb.news||[]).filter(n=>(!n.date||new Date(n.date).getTime()>=cut)&&!seen.has(n.text));
-  const kr=(kb.rumours||[]).filter(n=>!n.date||new Date(n.date).getTime()>=cut);
-  return {...t, coach:t.coach||kb.coach, news:(t.news||kn.length)?[...(t.news||[]),...kn]:undefined, rumours:kr.length?kr:undefined,
+// "at" = the moment the prediction is for: now for upcoming matches, kick-off for played ones, so a played match is
+// judged only with what was known before it (no news, coach changes or sackings from after the final whistle)
+const tms=x=>x?new Date(x).getTime():0;
+function coachAt(c,at){ if(!c) return c;
+  if(c.src==="news"&&c.since&&tms(c.since)>at) return {...c,name:c.prev||null,status:"ok",note:undefined};
+  if(c.status&&c.status!=="ok"&&tms(c.noteDate||c.updatedAt)>at) return {...c,status:"ok",note:undefined};
+  return c; }
+function mergeTeam(t,at=Date.now()){ const kb=teamsDB[tslug(t.name)]; if(!kb) return t;
+  const cut=at-21*864e5, seen=new Set((t.news||[]).map(n=>n.text)), when=n=>!n.date||(tms(n.date)>=cut&&tms(n.date)<=at);
+  const kn=(kb.news||[]).filter(n=>when(n)&&!seen.has(n.text));
+  const kr=(kb.rumours||[]).filter(when);
+  return {...t, coach:t.coach||coachAt(kb.coach,at), news:(t.news||kn.length)?[...(t.news||[]),...kn]:undefined, rumours:kr.length?kr:undefined,
     morale:t.morale??kb.morale, transfers:t.transfers??kb.transfers, transfersNote:t.transfersNote??kb.transfersNote};
 }
-function rebuild(){ matches=rawMatches.map(m=>({...m,home:mergeTeam(m.home),away:mergeTeam(m.away)})); calCache=null; }
+function rebuild(){ matches=rawMatches.map(m=>{ const at=Math.min(Date.now(),tms(m.kickoff)); return {...m,home:mergeTeam(m.home,at),away:mergeTeam(m.away,at)}; }); calCache=null; }
 const COACH={zawieszony:[0.97,1.01,"zawieszony, nie poprowadzi drużyny z ławki"],chory:[0.97,1.01,"chory, nie poprowadzi drużyny"],
   nieobecny:[0.97,1.01,"nieobecny na meczu"],zwolniony:[0.97,1.01,"właśnie zwolniony, drużynę prowadzi tymczasowy sztab"],
   tymczasowy:[0.98,1.01,"drużynę prowadzi trener tymczasowy"],"pod presją":[0.98,1,"pod presją, możliwa dymisja"],nowy:[1.02,1,"nowy trener, efekt nowej miotły"]};
@@ -381,7 +388,9 @@ function predict(m){
   const useElo=!!(m.home.elo&&m.away.elo&&!(m.home.overall?.p&&m.away.overall?.p));
   let lh,la,factors;
   if(useElo){ const adv=m.neutral?0:100, dr=m.home.elo-m.away.elo+adv, We=1/(1+Math.pow(10,-dr/400));
-    [lh,la]=eloLambdas(We,L.home+L.away);
+    // more goals when one side is much stronger: 2026-11 national-team matches with a big ranking gap had 3.8 goals
+    // on average (75% over 2.5) while a fixed total said 2.5; +50% at the extreme matched the results best
+    [lh,la]=eloLambdas(We,(L.home+L.away)*(1+0.5*(2*We-1)**2));
     factors=[{k:"base",label:"Ranking siły"+(adv?" + atut gospodarza":" (teren neutralny)"),note:`${m.home.elo} vs ${m.away.elo} pkt`,dh:lh/L.home,da:la/L.away}];
   } else {
     const sh=strength(m.home,L,"h",LG.cup), sa=strength(m.away,L,"a",LG.cup);
@@ -1209,7 +1218,7 @@ async function loadFiles(){
   }catch(e){ return false; }
 }
 /* new version and fresh data when the home-screen app comes back to the front (iPhone keeps the old page in memory) */
-const BUILD="20261118060021"; // replaced with the publish time; version.txt next to the page holds the newest one
+const BUILD="20261122145810"; // replaced with the publish time; version.txt next to the page holds the newest one
 let lastLoad=Date.now();
 async function checkVersion(){
   if(BUILD.startsWith("__")) return;
